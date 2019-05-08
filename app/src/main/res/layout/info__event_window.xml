@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/search_view_style"
+    android:padding="4dp">
+
+
+    <TextView
+        android:id="@+id/horaEvento2"
+        android:layout_width="340dp"
+        android:layout_height="0dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="12dp"
+        android:text="Descriçao:  Festa de carnaval, bora aproveitar pessoal, bebidas free, muita musica e curticao!"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/horaEvento3" />
+
+    <TextView
+        android:id="@+id/horaEvento3"
+        android:layout_width="wrap_content"
+        android:layout_height="19dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="12dp"
+        android:text="Nome do Evento"
+        android:textAlignment="center"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/horaEvento" />
+
+    <TextView
+        android:id="@+id/horaEvento"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="14dp"
+        android:text="Horario: 23:00"
+        android:textAlignment="center"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/info_window_title" />
+
+    <TextView
+        android:id="@+id/info_window_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="6dp"
+        android:text="Formatura Ulbra"
+        android:textAlignment="center"
+        android:textColor="@color/colorGreen"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="136dp"
+        android:layout_height="95dp"
+        android:layout_marginStart="140dp"
+        android:layout_marginTop="6dp"
+        app:layout_constraintStart_toEndOf="@+id/horaEvento"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/homem_de_ferro" />
+
+
+</android.support.constraint.ConstraintLayout>

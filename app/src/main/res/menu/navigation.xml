@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/bottom_nav_maps"
+        android:icon="@drawable/ic_map"
+        android:title="@string/bottom_nav_map_view" />
+
+    <item
+        android:id="@+id/bottom_nav_new_event"
+        android:icon="@drawable/ic_myevents"
+        android:title="@string/bottom_nav_new_event_view" />
+
+    <item
+        android:id="@+id/bottom_nav_list"
+        android:icon="@drawable/ic_list"
+        android:title="@string/bottom_nav_list_view" />
+
+
+
+</menu>

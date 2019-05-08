@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:id="@+id/fragment"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:elevation="10dp"
+        android:id="@+id/relativeLayout"
+        android:background="@drawable/search_view_style">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="70dp"
+            android:textSize="20dp"
+            android:textColor="#000"
+            android:id="@+id/searchLocation_EditText"
+            android:background="@null"
+            android:hint="Pesquisar"
+            android:imeOptions="actionSearch"
+            android:singleLine="true"/>
+
+    </RelativeLayout>
+
+    <ImageButton
+        android:id="@+id/getLocation_Button"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_below="@id/relativeLayout"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="355dp"
+        android:layout_marginRight="18dp"
+        android:background="@drawable/round_shape"
+        android:src="@drawable/ic_gps" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/add_event_button"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="19dp"
+        android:layout_marginBottom="108dp"
+        android:clickable="true"
+        app:backgroundTint="@color/colorGreen"
+        app:srcCompat="@drawable/more_icon" />
+
+</RelativeLayout>

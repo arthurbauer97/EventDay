@@ -1,0 +1,46 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/fragment_list"
+    android:layout_height="wrap_content"
+    android:fitsSystemWindows="true">
+
+    <RelativeLayout
+        android:id="@+id/toolbar_container"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@color/colorGreen">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_marginTop="14dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Locais próximos"
+            android:textAlignment="center"
+            android:textColor="#000000"
+            android:textSize="20dp" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/no_result_textview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar_container"
+        android:layout_marginTop="170dp"
+        android:text="Nenhum resultado disponível, verifique sua conexão com a internet ou se existem pontos no mapa próximos a você!"
+        android:textAlignment="center"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <ListView
+        android:id="@+id/places_listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar_container"
+        android:layout_marginBottom="55dp"
+        android:visibility="visible" />
+
+
+</LinearLayout>

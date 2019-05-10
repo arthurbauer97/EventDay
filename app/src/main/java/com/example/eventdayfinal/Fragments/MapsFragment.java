@@ -19,7 +19,6 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -28,12 +27,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.example.eventdayfinal.Activities.MainActivity;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -46,7 +43,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
@@ -64,33 +60,25 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 
 import com.example.eventdayfinal.Adapters.CustomWindowInfoAdapter;
-import com.example.eventdayfinal.Models.Event;
+import com.example.eventdayfinal.Models.Place;
 import com.example.eventdayfinal.R;
 import com.example.eventdayfinal.Utils.CustomSnackbar;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import static android.app.Activity.RESULT_OK;
-import static com.example.eventdayfinal.Utils.FirebaseUtils.isUserAuth;
 import static com.firebase.ui.auth.ui.email.CheckEmailFragment.TAG;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback,
@@ -106,7 +94,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private static final int SEND_LOCATION_REQUEST_CODE = 666;
     private static final float DEFAULT_ZOOM = 16f;
     private static final int MOVE_CAMERA = 1;
-    private static final int ANIMATE_CAMERA = 0;
     private static final long DEFAULT_DELAY_TIME = 1400;
 
 
@@ -115,16 +102,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
-    public static Event currentLocation;
+    public static Place currentLocation;
     private Marker lastMarker;
 
 
     //Firebase
-
-    private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference databaseEventsReference;
+    private DatabaseReference databasePlacesReference;
     private DatabaseReference databaseUsersReference;
     private FirebaseUser currentUser;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
 
     //Components
@@ -140,9 +126,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private String[] permissions = {FINE_LOCATION, COARSE_LOCATION};
     private boolean locationObtained;
     private boolean locationPermissionsGranted;
-    private Event lastSearchedPlace;
+    private Place lastSearchedPlace;
     private long lastTimeClicked;
-    private Event placeFromBundle;
+    private Place placeFromBundle;
 
 
     @Override
@@ -161,14 +147,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        firebaseDatabase = FirebaseDatabase.getInstance();
-        databaseEventsReference = FirebaseDatabase.getInstance().getReference("Eventos");
+        databasePlacesReference = FirebaseDatabase.getInstance().getReference("Places");
         databaseUsersReference = FirebaseDatabase.getInstance().getReference("Users");
 
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             currentUser = FirebaseAuth.getInstance().getCurrentUser();
         }
-
     }
 
 
@@ -178,12 +162,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
 
         MapView mapView = view.findViewById(R.id.map_view);
 
-        FloatingActionButton add_Event = view.findViewById(R.id.add_event_button);
-
         gettingConnSnackbar = new CustomSnackbar(getActivity());
         locationObtainedSnackbar = new CustomSnackbar(getActivity());
         GeoDataClient geoDataClient = Places.getGeoDataClient(getActivity());
         PlaceDetectionClient placeDetectionClient = Places.getPlaceDetectionClient(getActivity());
+
         lastTimeClicked = 0;
 
         searchEditText = getView().findViewById(R.id.searchLocation_EditText);
@@ -191,17 +174,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             @Override
             public void onClick(View v) {
                 getSuggestions();
-            }
-        });
-
-        //botao de adicionar evento que esta no mapa, chama a funcao para criar um evento
-        add_Event.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (((MainActivity)getActivity()).isUserAuth()) {
-                    ((MainActivity) getActivity()).showEventPicker();
-                }else
-                    ((MainActivity) getActivity()).showLoginDialog();
             }
         });
 
@@ -281,16 +253,16 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-
     //Callback for when map is ready
     @Override
     public void onMapReady(GoogleMap map) {
+
         Toast.makeText(getActivity(), "Map is ready", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "onMapReady: map is ready");
 
         googleMap = map;
 
-        updateMapWithFirebaseData();
+        fetchEvents();
 
         try {
             // Customise the styling of the base map using a JSON object defined
@@ -326,7 +298,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
 
     //--------------------------------LOCATION AND MAP DATA METHODS---------------------------------
 
-    //Adds a marker to the location specified
+    //adiciona a marka no mapa, com todos os eventos que foram adicionado
     private Marker addMarkerIntoMaps(double latitude, double longitude,
                                      String title) {
         LatLng latLng1 = new LatLng(latitude, longitude);
@@ -336,59 +308,32 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                 .title(title)
                 .draggable(true)
                 .icon(BitmapDescriptorFactory
-                        .fromResource(R.drawable.event_marker));
-//                        .fromBitmap(getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_maps_marker)));
+//                        .fromResource(R.drawable.event_marker));
+                        .fromBitmap(getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_maps_marker)));
         return googleMap.addMarker(options);
     }
 
-//    private void pegaDados() {
-//        firebaseFirestore.collection("Usuarios").document(userId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//            @Override
-//            public void onSuccess(DocumentSnapshot documentSnapshot) {
-//                if (documentSnapshot.exists()) {
-//                    Usuario usuario = documentSnapshot.toObject(Usuario.class);
-//
-//                    String nome_usuario = usuario.getNome();
-//                    nomeUsuario.setText(nome_usuario);
-//                }
-//            }
-//        });
-//    }
 
-    //Get/remove pins(Markers) in maps accordingly with firebaseData
-    private void updateMapWithFirebaseData() {
+    //tras o eventos do banco e coloca todos no mapa
+    private void fetchEvents() {
+        db.collection("places")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
+                        List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
+                        for(DocumentSnapshot doc:docs) {
+                            Place place = doc.toObject(Place.class);
+                            mapMarkers.put(place.getIdPlace(),
+                                    addMarkerIntoMaps(place.getLatitude(),
+                                            place.getLogintude(),
+                                            place.getPlaceName()));
 
-        databaseEventsReference.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                Event event = dataSnapshot.getValue(Event.class);
-
-                mapMarkers.put(event.getId(), addMarkerIntoMaps(event.getLatitude(),
-                        event.getLogintude(), event.getEventName()));
-
-//                if (currentUser != null) {
-                            moveCamera(event.getLatitude(), event.getLogintude(), DEFAULT_ZOOM, 0);
-                            mapMarkers.get(event.getId()).showInfoWindow();
+                            moveCamera(place.getLatitude(), place.getLogintude(), DEFAULT_ZOOM, 0);
+                            mapMarkers.get(place.getIdPlace()).showInfoWindow();
                             getSelectedLocationOnMaps();
-//                        }
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-            }
-        });
+                        }
+                    }
+                });
     }
 
     //Moves the camera to the location, accordingly with the option selected (animate or just move)
@@ -397,7 +342,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         if (option == 0) googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng1, zoom));
         else googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1, zoom));
     }
-
 
     @Override
     public void onInfoWindowClick(final Marker marker) {
@@ -436,7 +380,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                             @Override
                             public void onSuccess(Location location) {
                                 if (location != null) {
-                                    currentLocation = new Event(location.getLatitude(), location.getLongitude());
+                                    currentLocation = new Place(location.getLatitude(), location.getLongitude());
                                     locationObtained = true;
                                     googleMap.setMyLocationEnabled(true);
                                     googleMap.getUiSettings().setRotateGesturesEnabled(false);
@@ -468,13 +412,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                 .setValue(currentLocation);
     }
 
-
     //pega o local selecionado no mapa
     private void getSelectedLocationOnMaps() {
         try {
             locationObtained = true;
-            placeFromBundle = (Event) getArguments().getSerializable("PLACE_OBJECT");
-            Log.d("placeFromBundle State", placeFromBundle.getEventName());
+            placeFromBundle = (Place) getArguments().getSerializable("PLACE_OBJECT");
+            Log.d("placeFromBundle State", placeFromBundle.getPlaceName());
             if (placeFromBundle != null) {
                 Log.d("placeFromBundle State", "NOT NULL");
                 moveCamera(placeFromBundle.getLatitude(), placeFromBundle.getLogintude(), DEFAULT_ZOOM, MOVE_CAMERA);
@@ -496,7 +439,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             lastMarker = null;
         }
 
-        lastSearchedPlace = new Event(place.getId(),
+        lastSearchedPlace = new Place(place.getId(),
                 place.getName().toString(),
                 place.getLatLng().latitude,
                 place.getLatLng().longitude);
@@ -601,21 +544,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         return bitmap;
     }
 
-            //Compare two DateTimes, one from firebase registred place, other from android system,
-            //to see if they match choose interval of time, if they do, return true, else false.
-            private Boolean compareFirebaseDateTime(String stringDateTime) {
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
-                Date dateNow = Calendar.getInstance().getTime();
-
-                try {
-                    Date firebaseDateTime = simpleDateFormat.parse(stringDateTime);
-                    float diffInMinutes =  (dateNow.getTime() - firebaseDateTime.getTime()) / (1000 * 60);
-                    if(diffInMinutes < 0.02) return true;
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                return false;
-            }
 
     private void showCustomActiveGpsSnackbar() {
         Snackbar noGpsSnackbar = Snackbar.make(snackbarPlacer, R.string.snackbar_maps_no_gps, Snackbar.LENGTH_INDEFINITE);

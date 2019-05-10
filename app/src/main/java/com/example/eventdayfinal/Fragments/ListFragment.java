@@ -23,31 +23,35 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.example.eventdayfinal.Adapters.PlacesAdapter;
-import com.example.eventdayfinal.Models.Event;
+import com.example.eventdayfinal.Models.Place;
 import com.example.eventdayfinal.R;
 import com.example.eventdayfinal.Utils.FirebaseUtils;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 
 public class ListFragment extends Fragment implements Serializable {
 
     private ListView eventsListView;
     private TextView noResultsTextView;
-    private FirebaseUser currentUser;
-    private ArrayList<Event> eventsArray = new ArrayList<>();
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private ArrayList<Place> eventsArray = new ArrayList<>();
     private static final double DEFAULT_PLACES_DISTANCE = 20.0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list, container, false);
 
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
         eventsListView = view.findViewById(R.id.places_listview);
         noResultsTextView = view.findViewById(R.id.no_result_textview);
 
-        if(MapsFragment.currentLocation != null && FirebaseAuth.getInstance() != null) {
-            getNearbyEvents();
+        if (MapsFragment.currentLocation != null && FirebaseAuth.getInstance() != null) {
+            fetchEvents();
         } else {
             noResultsTextView.setVisibility(View.VISIBLE);
         }
@@ -59,7 +63,6 @@ public class ListFragment extends Fragment implements Serializable {
             }
         });
 
-
         return view;
     }
 
@@ -67,55 +70,33 @@ public class ListFragment extends Fragment implements Serializable {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
     }
 
+    //tras o eventos do banco e coloca todos no mapa
+    private void fetchEvents() {
+        db.collection("places")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
+                        List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
+                        for (DocumentSnapshot doc : docs) {
+                            Place place = doc.toObject(Place.class);
 
-    private void getNearbyEvents() {
-        final ArrayList<Event> eventsList = new ArrayList<>();
-        DatabaseReference events = FirebaseDatabase.getInstance().getReference("Eventos");
+                            if (place != null) {
+                                if (FirebaseUtils.distanceFromDatabasePlace(MapsFragment.currentLocation, place) < DEFAULT_PLACES_DISTANCE) {
+                                    eventsArray.add(place);
+                                    noResultsTextView.setVisibility(View.GONE);
+                                }
+                            }
+                            eventsListView.setAdapter(new PlacesAdapter(getContext(), eventsArray));
 
-        events.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                Event databaseEvent = dataSnapshot.getValue(Event.class);
-
-                if(databaseEvent != null) {
-                    if(FirebaseUtils.distanceFromDatabasePlace(MapsFragment.currentLocation, databaseEvent) < DEFAULT_PLACES_DISTANCE) {
-                        eventsArray.add(databaseEvent);
-                        noResultsTextView.setVisibility(View.GONE);
+                        }
                     }
-                }
-
-                eventsListView.setAdapter(new PlacesAdapter(getContext(), eventsArray));
-            }
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {}
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Event eventData = dataSnapshot.getValue(Event.class);
-
-
-                if(eventData != null) {
-                    if(FirebaseUtils.distanceFromDatabasePlace(MapsFragment.currentLocation, eventData) < DEFAULT_PLACES_DISTANCE) {
-                        eventsArray.remove(eventData);
-                        noResultsTextView.setVisibility(View.GONE);
-                    }
-                }
-
-                eventsListView.setAdapter(new PlacesAdapter(getContext(), eventsArray));
-            }
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String prevChildKey) {}
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                noResultsTextView.setVisibility(View.VISIBLE);
-            }
-        });
-
+                });
     }
 
-    private void showConfirmGoToPlaceDialog(final Event clickedPlace) {
+    //caso o usuario selecione na lista um evento pergunta se ...
+    private void showConfirmGoToPlaceDialog(final Place clickedPlace) {
         final AlertDialog.Builder builder =
                 new AlertDialog.Builder(getContext());
         builder.setMessage(R.string.listview_options_message)
@@ -137,7 +118,7 @@ public class ListFragment extends Fragment implements Serializable {
     }
 
 
-    private void goToEventLocationInMaps(Event event) {
+    private void goToEventLocationInMaps(Place event) {
         MapsFragment mapsFragment = new MapsFragment();
         Bundle bundle = new Bundle();
         bundle.putSerializable("PLACE_OBJECT", event);

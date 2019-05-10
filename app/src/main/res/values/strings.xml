@@ -28,7 +28,7 @@
     <string name="snackbar_maps_no_gps_action">Ativar GPS</string>
     <string name="bottom_nav_map_view">Mapa</string>
     <string name="bottom_nav_list_view">Lista</string>
-    <string name="bottom_nav_new_event_view">Meus Eventos</string>
+    <string name="bottom_nav_new_event_view">Novo Evento</string>
     <string name="listview_options_ok">Ver no mapa</string>
     <string name="listview_options_cancel">Cancelar</string>
     <string name="listview_options_message">Deseja ver este local no mapa?</string>

@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/fundo_login"
-    android:id="@+id/fragment_new_event">
+    android:id="@+id/fragment_new_event"
+    android:background="@color/colorBlack">
 
 
     <android.support.constraint.ConstraintLayout
@@ -17,11 +17,11 @@
         android:layout_marginTop="0dp">
 
         <EditText
-            android:id="@+id/nomeEvento"
+            android:id="@+id/nameEvent"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="44dp"
-            android:background="@drawable/caixa_de_texto_redonda"
+            android:background="@drawable/caixa_de_texto_redonda_branca"
             android:ems="10"
             android:hint="Nome do Evento"
             android:inputType="text"
@@ -33,11 +33,11 @@
             app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
         <EditText
-            android:id="@+id/dataEvento"
+            android:id="@+id/dateEvent"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/caixa_de_texto_redonda"
+            android:background="@drawable/caixa_de_texto_redonda_branca"
             android:ems="10"
             android:hint="Data do Evento"
             android:inputType="date"
@@ -46,14 +46,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/nomeEvento" />
+            app:layout_constraintTop_toBottomOf="@+id/nameEvent" />
 
         <EditText
-            android:id="@+id/horarioEvento"
+            android:id="@+id/hourEvent"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/caixa_de_texto_redonda"
+            android:background="@drawable/caixa_de_texto_redonda_branca"
             android:ems="10"
             android:hint="Horario do Evento"
             android:inputType="time"
@@ -62,14 +62,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dataEvento" />
+            app:layout_constraintTop_toBottomOf="@+id/dateEvent" />
 
         <EditText
-            android:id="@+id/ingressoEvento"
+            android:id="@+id/ticketEvent"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/caixa_de_texto_redonda"
+            android:background="@drawable/caixa_de_texto_redonda_branca"
             android:ems="10"
             android:hint="Valor Ingresso"
             android:inputType="numberDecimal"
@@ -78,14 +78,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/horarioEvento" />
+            app:layout_constraintTop_toBottomOf="@+id/hourEvent" />
 
         <EditText
-            android:id="@+id/descricaoEvento"
+            android:id="@+id/descriptionEvent"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/caixa_de_texto_redonda"
+            android:background="@drawable/caixa_de_texto_redonda_branca"
             android:ems="10"
             android:hint="Descrição do Evento"
             android:inputType="text"
@@ -94,7 +94,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ingressoEvento" />
+            app:layout_constraintTop_toBottomOf="@+id/ticketEvent" />
 
         <TextView
             android:id="@+id/textView4"
@@ -103,60 +103,62 @@
             android:layout_marginStart="112dp"
             android:layout_marginTop="44dp"
             android:text="Bom Evento "
-            android:textColor="@android:color/white"
+            android:textColor="@color/colorGreen"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
-            android:id="@+id/botaoCadastroEvento"
+            android:id="@+id/buttonSelectLocationMap"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:background="@drawable/botao_redondo"
             android:backgroundTint="@android:color/white"
-            android:text="Cadastrar"
+            android:text="Continuar"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/descricaoEvento"
-            app:layout_constraintVertical_bias="0.159"
-            tools:layout_editor_absoluteY="518dp" />
-
-        <!--<ProgressBar-->
-        <!--android:id="@+id/progressBar"-->
-        <!--style="?android:attr/progressBarStyleHorizontal"-->
-        <!--app:layout_constraintEnd_toEndOf="parent"-->
-        <!--app:layout_constraintStart_toStartOf="parent"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:indeterminate="true" />-->
-
-        <ImageView
-            android:id="@+id/fecharCadastroEvento"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/button_photo"
+            app:layout_constraintVertical_bias="0.406" />
 
         <TextView
             android:id="@+id/nomeCriadorDoEvento"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginTop="44dp"
             android:text="TextView"
-            android:textColor="@android:color/white"
+            android:textColor="@color/colorGreen"
             android:textSize="20sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/textView4"
-            app:layout_constraintTop_toBottomOf="@+id/fecharCadastroEvento"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="Criador" />
+
+        <Button
+            android:id="@+id/button_photo"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="36dp"
+            android:background="@drawable/botao_redondo"
+            android:backgroundTint="@android:color/white"
+            android:text="Selecionar Imagem"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/descriptionEvent" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/photo_event"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            app:layout_constraintBottom_toBottomOf="@+id/button_photo"
+            app:layout_constraintEnd_toEndOf="@+id/button_photo"
+            app:layout_constraintStart_toStartOf="@+id/button_photo"
+            app:layout_constraintTop_toTopOf="@+id/button_photo"
+            tools:srcCompat="@tools:sample/avatars[0]" />
     </android.support.constraint.ConstraintLayout>
 
 </RelativeLayout>

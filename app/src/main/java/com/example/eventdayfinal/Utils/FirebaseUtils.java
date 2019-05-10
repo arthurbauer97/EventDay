@@ -4,7 +4,7 @@ package com.example.eventdayfinal.Utils;
 import android.location.Location;
 import android.util.Log;
 
-import com.example.eventdayfinal.Models.Event;
+import com.example.eventdayfinal.Models.Place;
 import com.example.eventdayfinal.Models.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -23,6 +23,9 @@ public class FirebaseUtils {
     private static DatabaseReference usersReference
             = FirebaseDatabase.getInstance().getReference("Users");
 
+    private static DatabaseReference eventsReference
+            = FirebaseDatabase.getInstance().getReference("Events");
+
     public static FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
     public static boolean isUserAuth = currentUser != null;
@@ -38,12 +41,9 @@ public class FirebaseUtils {
         }
     }
 
-    public static boolean savePlace(Event place, List<Integer> paymentMethods) {
-
-//        place.setAcceptedSmartcoins(filterPayments(paymentMethods));
-
+    public static boolean savePlace(Place place, List<Integer> paymentMethods) {
         try {
-            placesReference.child(place.getId()).setValue(place);
+            placesReference.child(place.getIdPlace()).setValue(place);
             return true;
         } catch (Exception e) {
             Log.d("FirebaseUtils-savePlace", e.getMessage());
@@ -51,25 +51,7 @@ public class FirebaseUtils {
         }
     }
 
-    private static Map<String, Boolean> filterPayments(List<Integer> paymentMethodsToFilter) {
-        Map<String, Boolean> acceptedPayments = new HashMap<>(3);
-
-        if (paymentMethodsToFilter.contains(0)) {
-            acceptedPayments.put("Cripto", true);
-        } else acceptedPayments.put("Cripto", false);
-
-        if (paymentMethodsToFilter.contains(1)) {
-            acceptedPayments.put("SmartPay - SmartCard", true);
-        } else acceptedPayments.put("SmartPay - SmartCard", false);
-
-        if (paymentMethodsToFilter.contains(2)) {
-            acceptedPayments.put("AtarBand", true);
-        } else acceptedPayments.put("AtarBand", false);
-
-        return acceptedPayments;
-    }
-
-    public static double distanceFromDatabasePlace(Event currentPlace, Event placeFromDatabase) {
+    public static double distanceFromDatabasePlace(Place currentPlace, Place placeFromDatabase) {
         if(placeFromDatabase == null) {
             return -1;
         }

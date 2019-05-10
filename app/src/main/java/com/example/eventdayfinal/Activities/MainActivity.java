@@ -22,7 +22,6 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -31,8 +30,7 @@ import android.widget.Toast;
 import com.example.eventdayfinal.Fragments.ListFragment;
 import com.example.eventdayfinal.Fragments.MapsFragment;
 import com.example.eventdayfinal.Fragments.NewEventFragment;
-import com.example.eventdayfinal.Models.Event;
-import com.example.eventdayfinal.Models.Register;
+import com.example.eventdayfinal.Models.Place;
 import com.example.eventdayfinal.Models.User;
 import com.example.eventdayfinal.R;
 import com.firebase.ui.auth.AuthUI;
@@ -43,28 +41,21 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.Objects;
-
-import static com.example.eventdayfinal.Utils.FirebaseUtils.currentUser;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    //Firebase
-    private FirebaseAuth firebaseAuth;
+    //Firebase comands
+    private FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+    private FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
     private FirebaseAuth.AuthStateListener authStateListener;
-    private FirebaseUser firebaseUser;
-    private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference databaseReference;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     //Components
     private NavigationView navigationView;
@@ -78,18 +69,14 @@ public class MainActivity extends AppCompatActivity
     private BottomNavigationView bottomMenu;
 
 
-    //Variables
-    private User userData;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         //menu lateral
         navigationView = findViewById(R.id.nav_view);
+
         //fica ouvindo o click no menu lateral
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -107,12 +94,14 @@ public class MainActivity extends AppCompatActivity
 
         //menu inferior
         bottomMenu = findViewById(R.id.bottom_nav);
+
         //fica ouvindo o click no menu inferior
         bottomMenu.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
 
         //botao para abrir o menu lateral
         drawerMenuButton = findViewById(R.id.drawer_menu_icon);
+
         //fica ouvindo o click no menu inferior
         drawerMenuButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,13 +109,6 @@ public class MainActivity extends AppCompatActivity
                 openNavigationDrawer();
             }
         });
-
-        //firebase comands
-        firebaseDatabase = FirebaseDatabase.getInstance();
-        firebaseAuth = FirebaseAuth.getInstance();
-        firebaseUser = firebaseAuth.getCurrentUser();
-        databaseReference = firebaseDatabase.getReference();
-
 
         //carrega os dados do usuario logado
         updateUserUIInfo();
@@ -138,7 +120,6 @@ public class MainActivity extends AppCompatActivity
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content_frame,
                         new MapsFragment()).commit();
-
     }
 
     @Override
@@ -165,14 +146,12 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-
     }
-
 
     //startActivityForResult Callback
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        //This needs to be declared in order to use this same method in fragment
+
         // Isso precisa ser declarado para usar este mesmo método no fragmento
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content_frame);
         fragment.onActivityResult(requestCode, resultCode, data);
@@ -182,59 +161,59 @@ public class MainActivity extends AppCompatActivity
                 final com.google.android.gms.location.places.Place locationData = PlacePicker.getPlace(this, data);
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//
-                insertEventIntoDatabase(locationData);
-//
+                createPlace(locationData);
+
             }
         }
     }
-
-
     //--------------------------------------DATABASE METHODS----------------------------------------
 
-    private void insertEventIntoDatabase(com.google.android.gms.location.places.Place locationData) {
-
-        Register registerData =  new Register(new User(currentUser.getUid(),
-                currentUser.getDisplayName(),
-                currentUser.getEmail()),
-                getCurrentDateTime());
-
-        Event event = new Event(
+    //insere uma place no firebase
+    public void createPlace(com.google.android.gms.location.places.Place locationData){
+        final Place place = new Place(
                 locationData.getId(),
                 locationData.getName().toString(),
                 locationData.getLatLng().latitude,
                 locationData.getLatLng().longitude,
-                locationData.getAddress().toString(),
-                registerData);
+                locationData.getAddress().toString()
+        );
 
-        databaseReference.child("Eventos").child(event.getId()).setValue(event);
-
-        Toast.makeText(getApplicationContext(), "Evento salvo no banco de dados", Toast.LENGTH_LONG).show();
-
-
-        closeNavigationDrawer();
-
-        //alerta que o local foi adicionado
-        showSnackbar(R.color.colorSnackbarSucess, R.string.snackbar_success_save);
-
-      unmarkMenuItem(R.id.nav_add);
+        DocumentReference ref = db.collection("places").document();
+            ref.
+                    set(place)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.i("Success", place.getIdPlace());
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.e("Success", place.getIdPlace());
+                        }
+                    });
     }
 
-    //Get the current date and time, and return them in a string format,
-    //because firebase handles it better that way.
-    private String getCurrentDateTime() {
-        String currentDateTime;
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
-
-        return currentDateTime = simpleDateFormat.format(calendar.getTime());
-    }
-
-    // insere usuario no banco
+    // insere usuario no firebase
     private void insertNewUserIntoDatabase() {
-        userData  = new User(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getEmail());
+        final User userData  = new User(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getEmail());
 
-        databaseReference.child("Users").child(userData.getUserID()).setValue(userData);
+        DocumentReference ref = db.collection("users").document();
+            ref.
+                    set(userData)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.i("Success", userData.getUserID());
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.e("Error",userData.getUserID());
+                        }
+                    });
     }
     //-------------------------------------AUTH METHODS---------------------------------------------
 
@@ -372,12 +351,13 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         switch(id) {
-            case R.id.nav_add:
-                if(isUserAuth())
-                    showEventPicker();
-                else showLoginDialog();
+            case R.id.nav_new_event:
+                if(isUserAuth()) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.content_frame,
+                                    new NewEventFragment()).addToBackStack(null).commit();
+                } else showLoginDialog();
                 break;
-
             case R.id.nav_events:
                 Toast.makeText(this, "To be implemented", Toast.LENGTH_SHORT).show();
                 break;
@@ -397,8 +377,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-
-    //Show Maps EventPicker and awaits for response in the callback onActivityResult
     //Mostra o mapas para selecionar o local e aguarda resposta no retorno de chamada onActivityResult
     public void showEventPicker() {
         PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
@@ -427,10 +405,12 @@ public class MainActivity extends AppCompatActivity
                                     new ListFragment()).addToBackStack(null).commit();
                     return true;
                 case R.id.bottom_nav_new_event:
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.content_frame,
-                                    new NewEventFragment()).addToBackStack(null).commit();
-                    return true;
+                    if(isUserAuth()) {
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.content_frame,
+                                        new NewEventFragment()).addToBackStack(null).commit();
+                    } else showLoginDialog();
+                    break;
             }
             return false;
         }
@@ -438,7 +418,6 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    //inner class that exclusively handle the download and config of the user profile image
     //classe interna que manipula exclusivamente o download e a configuração da imagem do perfil do usuário
     @SuppressLint("StaticFieldLeak")
     private class ProfileImageHandler extends AsyncTask<String, Void, Bitmap> {

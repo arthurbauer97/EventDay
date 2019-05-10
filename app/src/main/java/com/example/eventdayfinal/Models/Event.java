@@ -1,90 +1,77 @@
 package com.example.eventdayfinal.Models;
 
+import android.widget.EditText;
+
 import java.io.Serializable;
+import java.util.Date;
 
 public class Event implements Serializable {
 
-    private String id;
-    private String eventName;
-    private double latitude;
-    private double logintude;
-    private String adress;
-    private Register registerData;
+    private String idEvent;
+    private String nameEvent;
+    private String hourEvent;
+    private String dateEvent;
+    private String ticketEvent;
+    private String descriptionEvent;
 
+    public Event(){}
 
-    public Event() {
-
-    }
-    public Event(String id, String eventName, double latitude, double logintude,String adress, Register registerData) {
-        this.id = id;
-        this.eventName = eventName;
-        this.latitude = latitude;
-        this.logintude = logintude;
-        this.registerData = registerData;
-        this.adress = adress;
+    public Event(String nomeEvento, String horarioEvento, EditText dateEvent, String ingressoEvento, String descricaEvento) {
     }
 
-    public Event(String id, String eventName, double latitude, double logintude) {
-        this.id = id;
-        this.eventName = eventName;
-        this.latitude = latitude;
-        this.logintude = logintude;
-
+    public Event(String nameEvent, String hourEvent, String dateEvent, String ticketEvent,String descriptionEvent) {
+        this.nameEvent = nameEvent;
+        this.hourEvent = hourEvent;
+        this.dateEvent = dateEvent;
+        this.ticketEvent = ticketEvent;
+        this.descriptionEvent = descriptionEvent;
     }
 
-    public Event(double latitude, double logintude) {
-        this.latitude = latitude;
-        this.logintude = logintude;
-
+    public String getIdEvent() {
+        return idEvent;
     }
 
-    public Register getRegisterData() {
-        return registerData;
+    public String getTicketEvent() {
+        return ticketEvent;
     }
 
-    public void setRegisterData(Register registerData) {
-        this.registerData = registerData;
+    public void setTicketEvent(String ticketEvent) {
+        this.ticketEvent = ticketEvent;
     }
 
-
-    public String getId() {
-        return id;
+    public void setIdEvent(String idEvent) {
+        this.idEvent = idEvent;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getHourEvent() {
+        return hourEvent;
     }
 
-    public String getEventName() {
-        return eventName;
+    public void setHourEvent(String hourEvent) {
+        this.hourEvent = hourEvent;
     }
 
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
+    public String getDescriptionEvent() {
+        return descriptionEvent;
     }
 
-    public double getLatitude() {
-        return latitude;
+    public void setDescriptionEvent(String descriptionEvent) {
+        this.descriptionEvent = descriptionEvent;
     }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
+    public String getNameEvent() {
+        return nameEvent;
     }
 
-    public double getLogintude() {
-        return logintude;
+    public void setNameEvent(String nameEvent) {
+        this.nameEvent = nameEvent;
     }
 
-    public void setLogintude(double logintude) {
-        this.logintude = logintude;
+    public String getDateEvent() {
+        return dateEvent;
     }
 
-    public String getAdress() {
-        return adress;
+    public void setDateEvent(String dateEvent) {
+        this.dateEvent = dateEvent;
     }
-
-    public void setAdress(String adress) {
-        this.adress = adress;
-    }
-
 }

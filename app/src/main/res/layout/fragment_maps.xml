@@ -46,21 +46,9 @@
         android:layout_height="55dp"
         android:layout_below="@id/relativeLayout"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="355dp"
-        android:layout_marginRight="18dp"
+        android:layout_marginTop="476dp"
+        android:layout_marginRight="21dp"
         android:background="@drawable/round_shape"
         android:src="@drawable/ic_gps" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/add_event_button"
-        android:layout_width="55dp"
-        android:layout_height="55dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="19dp"
-        android:layout_marginBottom="108dp"
-        android:clickable="true"
-        app:backgroundTint="@color/colorGreen"
-        app:srcCompat="@drawable/more_icon" />
 
 </RelativeLayout>

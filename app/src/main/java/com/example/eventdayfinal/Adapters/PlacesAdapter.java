@@ -7,17 +7,17 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.example.eventdayfinal.Models.Event;
+import com.example.eventdayfinal.Models.Place;
 import com.example.eventdayfinal.R;
 
 import java.util.ArrayList;
 
 public class PlacesAdapter extends BaseAdapter {
 
-    private ArrayList<Event> listOfPlaces;
+    private ArrayList<Place> listOfPlaces;
     private LayoutInflater inflater;
 
-    public PlacesAdapter(Context context, ArrayList<Event> places) {
+    public PlacesAdapter(Context context, ArrayList<Place> places) {
         listOfPlaces = places;
         inflater = LayoutInflater.from(context);
     }
@@ -44,7 +44,7 @@ public class PlacesAdapter extends BaseAdapter {
         TextView placeName = view.findViewById(R.id.place_name_listview);
         TextView placeAdress = view.findViewById(R.id.place_adress_listview);
 
-        placeName.setText(listOfPlaces.get(position).getEventName());
+        placeName.setText(listOfPlaces.get(position).getPlaceName());
         placeAdress.setText(listOfPlaces.get(position).getAdress());
 
         return view;

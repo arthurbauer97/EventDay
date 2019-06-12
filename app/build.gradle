@@ -45,6 +45,9 @@ dependencies {
     implementation 'com.google.android.gms:play-services-places:15.0.1'
     implementation 'com.google.android.gms:play-services-location:15.0.1'
 
+    //Mask
+    implementation 'com.github.rtoshiro.mflibrary:mflibrary:1.0.0'
+
     //imagem
     implementation 'de.hdodenhof:circleimageview:3.0.0'
 }

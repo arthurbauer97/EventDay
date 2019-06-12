@@ -8,11 +8,12 @@
     <string name="nav_header_subtitle">eventdayvisitante@gmail.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-    <string name="menu_option_1">Adicionar Evento</string>
+    <string name="menu_option_1">Criar Evento</string>
     <string name="menu_option_2">Meus Eventos</string>
-    <string name="menu_option_3">Configurações</string>
     <string name="menu_option_logout">Sair</string>
+    <string name="menu_option_login">Cadastrar</string>
     <string name="do_login_alert_message">Para criar um evento, você precisa estar logado</string>
+    <string name="do_login_my_events">Para ver seus eventos, você precisa estar logado</string>
     <string name="do_login_alert_option_1">Ok</string>
     <string name="do_login_alert_option_2">Cancelar</string>
     <string name="new_event">Adicionar Evento</string>
@@ -27,14 +28,18 @@
     <string name="snackbar_maps_getting_gps">Procurando por localização…</string>
     <string name="snackbar_maps_no_gps_action">Ativar GPS</string>
     <string name="bottom_nav_map_view">Mapa</string>
-    <string name="bottom_nav_list_view">Lista</string>
-    <string name="bottom_nav_new_event_view">Novo Evento</string>
+    <string name="bottom_nav_list_view">Eventos</string>
+    <string name="bottom_nav_new_event_view">Criar Evento</string>
     <string name="listview_options_ok">Ver no mapa</string>
     <string name="listview_options_cancel">Cancelar</string>
     <string name="listview_options_message">Deseja ver este local no mapa?</string>
     <string name="new_place_from_marker_message">Deseja adicionar este local?</string>
     <string name="report_message">Deseja reportar este local?</string>
     <string name="edit_ok">Sim</string>
+    <string name="is_empty">Preencha todos os campos</string>
     <string name="edit_cancel">Não</string>
+    <string name="event_sucess">Evento Adicionado</string>
+    <string name="event_deleted">Evento Deletado</string>
+    <string name="event_error">Algo deu errado</string>
 
 </resources>

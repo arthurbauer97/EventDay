@@ -29,7 +29,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -42,14 +41,12 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -58,18 +55,20 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.eventbus.Subscribe;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.example.eventdayfinal.Adapters.CustomWindowInfoAdapter;
-import com.example.eventdayfinal.Models.Place;
+import com.example.eventdayfinal.Adapters.InfoAdapter;
+import com.example.eventdayfinal.Models.Event;
 import com.example.eventdayfinal.R;
 import com.example.eventdayfinal.Utils.CustomSnackbar;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -102,12 +101,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
-    public static Place currentLocation;
+    public static Event currentLocation = new Event();
     private Marker lastMarker;
 
 
     //Firebase
-    private DatabaseReference databasePlacesReference;
     private DatabaseReference databaseUsersReference;
     private FirebaseUser currentUser;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -126,9 +124,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private String[] permissions = {FINE_LOCATION, COARSE_LOCATION};
     private boolean locationObtained;
     private boolean locationPermissionsGranted;
-    private Place lastSearchedPlace;
+    private Event lastSearchedPlace = new Event();
     private long lastTimeClicked;
-    private Place placeFromBundle;
+    private Event eventFromBundle;
+
+    private ArrayList<Event> eventsArray = new ArrayList<>();
 
 
     @Override
@@ -147,14 +147,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        databasePlacesReference = FirebaseDatabase.getInstance().getReference("Places");
         databaseUsersReference = FirebaseDatabase.getInstance().getReference("Users");
 
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             currentUser = FirebaseAuth.getInstance().getCurrentUser();
         }
-    }
 
+    }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -164,8 +163,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
 
         gettingConnSnackbar = new CustomSnackbar(getActivity());
         locationObtainedSnackbar = new CustomSnackbar(getActivity());
-        GeoDataClient geoDataClient = Places.getGeoDataClient(getActivity());
-        PlaceDetectionClient placeDetectionClient = Places.getPlaceDetectionClient(getActivity());
 
         lastTimeClicked = 0;
 
@@ -199,8 +196,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                         R.color.colorSnackbarSucess).show();
                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
             }
-
-            ;
         };
 
         if (mapView != null) {
@@ -209,7 +204,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             mapView.getMapAsync(this);
         }
     }
-
 
     //Opens PlaceAutocomplete fragment from EdiText
     private void getSuggestions() {
@@ -224,7 +218,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         } catch (GooglePlayServicesNotAvailableException e) {
         }
     }
-
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -256,17 +249,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     //Callback for when map is ready
     @Override
     public void onMapReady(GoogleMap map) {
-
-        Toast.makeText(getActivity(), "Map is ready", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "onMapReady: map is ready");
-
         googleMap = map;
 
         fetchEvents();
 
+        // personaliza o mapa com o tom preto de fundo
         try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
             boolean success = googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             getActivity(), R.raw.mapstyle));
@@ -290,47 +278,59 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             }
         }, DEFAULT_DELAY_TIME);
 
+
+
         map.setOnInfoWindowClickListener(this);
-        map.setOnInfoWindowLongClickListener(this);
-        map.setInfoWindowAdapter(new CustomWindowInfoAdapter(getContext()));
+        map.setInfoWindowAdapter(new InfoAdapter(getContext()));
     }
 
+
+//    private void fetchEventMarkerClick(){
+//            db.collection("events").whereEqualTo("nameEvent",mapMarkers)
+//                    .addSnapshotListener()
+//
+//    }
 
     //--------------------------------LOCATION AND MAP DATA METHODS---------------------------------
 
     //adiciona a marka no mapa, com todos os eventos que foram adicionado
     private Marker addMarkerIntoMaps(double latitude, double longitude,
-                                     String title) {
+                                     String title,String date,String hour, String description) {
         LatLng latLng1 = new LatLng(latitude, longitude);
+
+        Event event = new Event();
+        event.setLatitude(latitude);
+        event.setLogintude(longitude);
+        event.setNameEvent(title);
+        event.setDateEvent(date);
+        event.setHourEvent(hour);
+        event.setDescriptionEvent(description);
 
         MarkerOptions options = new MarkerOptions()
                 .position(latLng1)
                 .title(title)
-                .draggable(true)
+                .draggable(false)
                 .icon(BitmapDescriptorFactory
-//                        .fromResource(R.drawable.event_marker));
                         .fromBitmap(getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_maps_marker)));
         return googleMap.addMarker(options);
     }
 
-
     //tras o eventos do banco e coloca todos no mapa
     private void fetchEvents() {
-        db.collection("places")
+        db.collection("events")
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
                         List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
                         for(DocumentSnapshot doc:docs) {
-                            Place place = doc.toObject(Place.class);
-                            mapMarkers.put(place.getIdPlace(),
-                                    addMarkerIntoMaps(place.getLatitude(),
-                                            place.getLogintude(),
-                                            place.getPlaceName()));
-
-                            moveCamera(place.getLatitude(), place.getLogintude(), DEFAULT_ZOOM, 0);
-                            mapMarkers.get(place.getIdPlace()).showInfoWindow();
-                            getSelectedLocationOnMaps();
+                            Event event = doc.toObject(Event.class);
+                            mapMarkers.put(event.getIdEvent(),
+                                    addMarkerIntoMaps(event.getLatitude(),
+                                            event.getLogintude(),
+                                            event.getNameEvent(),
+                                            event.getDateEvent(),
+                                            event.getHourEvent(),
+                                            event.getDescriptionEvent()));
                         }
                     }
                 });
@@ -343,34 +343,17 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         else googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1, zoom));
     }
 
+    // mensagem que aparece ao clicar na informacao de algum evento
     @Override
     public void onInfoWindowClick(final Marker marker) {
-        showConfirmInsertLastPlaceDialog();
     }
 
+    // mensagem que aparece ao segurar na informacao de algum evento
     @Override
     public void onInfoWindowLongClick(final Marker marker) {
-        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
     }
 
-
-    private void showConfirmInsertLastPlaceDialog() {
-        final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
-        alertBuilder.setMessage(R.string.new_place_from_marker_message)
-                .setPositiveButton(R.string.do_login_alert_option_1, new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                    }
-                })
-                .setNegativeButton(R.string.do_login_alert_option_2, new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        dialog.cancel();
-                    }
-                })
-                .setCancelable(false);
-        final AlertDialog alert = alertBuilder.create();
-        alert.show();
-    }
-
+    // pega localizacao do usuario
     private void getCurrentLocation() {
         if (locationPermissionsGranted) {
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this.getContext());
@@ -380,7 +363,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                             @Override
                             public void onSuccess(Location location) {
                                 if (location != null) {
-                                    currentLocation = new Place(location.getLatitude(), location.getLongitude());
+                                    currentLocation.setLatitude(location.getLatitude());
+                                    currentLocation.setLogintude(location.getLongitude());
                                     locationObtained = true;
                                     googleMap.setMyLocationEnabled(true);
                                     googleMap.getUiSettings().setRotateGesturesEnabled(false);
@@ -416,20 +400,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private void getSelectedLocationOnMaps() {
         try {
             locationObtained = true;
-            placeFromBundle = (Place) getArguments().getSerializable("PLACE_OBJECT");
-            Log.d("placeFromBundle State", placeFromBundle.getPlaceName());
-            if (placeFromBundle != null) {
-                Log.d("placeFromBundle State", "NOT NULL");
-                moveCamera(placeFromBundle.getLatitude(), placeFromBundle.getLogintude(), DEFAULT_ZOOM, MOVE_CAMERA);
-                /* mapMarkers.get(placeFromBundle.getId()).showInfoWindow();*/
-                placeFromBundle = null;
+            eventFromBundle = (Event) getArguments().getSerializable("event");
+            if (eventFromBundle != null) {
+                moveCamera(eventFromBundle.getLatitude(), eventFromBundle.getLogintude(), DEFAULT_ZOOM, MOVE_CAMERA);
+                eventFromBundle = null;
             } else {
-                Log.d("placeFromBundle State", "NULL");
                 getCurrentLocation();
             }
         } catch (NullPointerException e) {
             getCurrentLocation();
-            Log.d("placeFromBundle Excep", e.getMessage());
         }
     }
 
@@ -439,15 +418,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             lastMarker = null;
         }
 
-        lastSearchedPlace = new Place(place.getId(),
-                place.getName().toString(),
-                place.getLatLng().latitude,
-                place.getLatLng().longitude);
+        lastSearchedPlace.setIdEvent(place.getId());
+        lastSearchedPlace.setNameEvent(place.getName().toString());
+        lastSearchedPlace.setLatitude(place.getLatLng().latitude);
+        lastSearchedPlace.setLogintude(place.getLatLng().longitude);
 
         if (mapMarkers.get(place.getId()) == null) {
             MarkerOptions options = new MarkerOptions()
                     .position(place.getLatLng())
-                    .draggable(true)
+                    .draggable(false)
                     .snippet("Clique aqui para adicionar o local")
                     .title(place.getName().toString());
 
@@ -460,10 +439,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         searchEditText.setText(place.getName());
     }
 
-
     //----------------------------------PERMISSIONS AND REQUESTS------------------------------------
 
-    //Requests user permission for FINE_LOCATION and COARSE_LOCATION, the result is handled by a callback
+    // pede ao usuario a permissao para usar sua localizacao
     private void getLocationPermission() {
         if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(),
                 FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
@@ -474,7 +452,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
-
 
     //Permission answer callback
     @Override
@@ -489,7 +466,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             }
         }
     }
-
 
     //Checks if GPS is activated, if not, asks the user to turn it on
     protected void sendLocationRequest() {
@@ -525,11 +501,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-
     //-----------------------------------UTILS METHODS----------------------------------------------
 
-    //Compare two DateTimes, one from firebase registred place, other from android system,
-    //to see if they match choose interval of time, if they do, return true, else false.
+    // Comparar dois DateTimes, um do firebase registrado, outro do android system,
+    // para ver se eles combinam escolha intervalo de tempo, se o fizerem, retorne verdadeiro, senão falso.
     public Bitmap getBitmapFromVectorDrawable(Activity context, int drawableId) {
         Drawable drawable = ContextCompat.getDrawable(context, drawableId);
 
@@ -543,7 +518,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
 
         return bitmap;
     }
-
 
     private void showCustomActiveGpsSnackbar() {
         Snackbar noGpsSnackbar = Snackbar.make(snackbarPlacer, R.string.snackbar_maps_no_gps, Snackbar.LENGTH_INDEFINITE);
@@ -564,3 +538,20 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         noGpsSnackbar.show();
     }
 }
+
+//    private void showConfirmInsertLastPlaceDialog() {
+//        final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
+//        alertBuilder.setMessage(R.string.new_place_from_marker_message)
+//                .setPositiveButton(R.string.do_login_alert_option_1, new DialogInterface.OnClickListener() {
+//                    public void onClick(final DialogInterface dialog, final int id) {
+//                    }
+//                })
+//                .setNegativeButton(R.string.do_login_alert_option_2, new DialogInterface.OnClickListener() {
+//                    public void onClick(final DialogInterface dialog, final int id) {
+//                        dialog.cancel();
+//                    }
+//                })
+//                .setCancelable(false);
+//        final AlertDialog alert = alertBuilder.create();
+//        alert.show();
+//    }

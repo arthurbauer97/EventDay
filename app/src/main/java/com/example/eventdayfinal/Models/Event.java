@@ -1,25 +1,35 @@
 package com.example.eventdayfinal.Models;
 
-import android.widget.EditText;
+
 
 import java.io.Serializable;
-import java.util.Date;
+
 
 public class Event implements Serializable {
 
     private String idEvent;
+    private String idUser;
+    private String idMarker;
+    private double latitude;
+    private double logintude;
+    private String adress;
+    private String urlPhoto;
     private String nameEvent;
     private String hourEvent;
     private String dateEvent;
     private String ticketEvent;
     private String descriptionEvent;
 
-    public Event(){}
+    public Event() {}
 
-    public Event(String nomeEvento, String horarioEvento, EditText dateEvent, String ingressoEvento, String descricaEvento) {
-    }
 
-    public Event(String nameEvent, String hourEvent, String dateEvent, String ticketEvent,String descriptionEvent) {
+    public Event(String idEvent, String idUser, double latitude, double logintude, String adress, String urlPhoto, String nameEvent, String hourEvent, String dateEvent, String ticketEvent, String descriptionEvent) {
+        this.idEvent = idEvent;
+        this.idUser = idUser;
+        this.latitude = latitude;
+        this.logintude = logintude;
+        this.adress = adress;
+        this.urlPhoto = urlPhoto;
         this.nameEvent = nameEvent;
         this.hourEvent = hourEvent;
         this.dateEvent = dateEvent;
@@ -27,36 +37,54 @@ public class Event implements Serializable {
         this.descriptionEvent = descriptionEvent;
     }
 
+
+
     public String getIdEvent() {
         return idEvent;
-    }
-
-    public String getTicketEvent() {
-        return ticketEvent;
-    }
-
-    public void setTicketEvent(String ticketEvent) {
-        this.ticketEvent = ticketEvent;
     }
 
     public void setIdEvent(String idEvent) {
         this.idEvent = idEvent;
     }
 
-    public String getHourEvent() {
-        return hourEvent;
+    public String getIdUser() {
+        return idUser;
     }
 
-    public void setHourEvent(String hourEvent) {
-        this.hourEvent = hourEvent;
+    public void setIdUser(String idUser) {
+        this.idUser = idUser;
     }
 
-    public String getDescriptionEvent() {
-        return descriptionEvent;
+    public double getLatitude() {
+        return latitude;
     }
 
-    public void setDescriptionEvent(String descriptionEvent) {
-        this.descriptionEvent = descriptionEvent;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLogintude() {
+        return logintude;
+    }
+
+    public void setLogintude(double logintude) {
+        this.logintude = logintude;
+    }
+
+    public String getAdress() {
+        return adress;
+    }
+
+    public void setAdress(String adress) {
+        this.adress = adress;
+    }
+
+    public String getUrlPhoto() {
+        return urlPhoto;
+    }
+
+    public void setUrlPhoto(String urlPhoto) {
+        this.urlPhoto = urlPhoto;
     }
 
     public String getNameEvent() {
@@ -67,6 +95,14 @@ public class Event implements Serializable {
         this.nameEvent = nameEvent;
     }
 
+    public String getHourEvent() {
+        return hourEvent;
+    }
+
+    public void setHourEvent(String hourEvent) {
+        this.hourEvent = hourEvent;
+    }
+
     public String getDateEvent() {
         return dateEvent;
     }
@@ -74,4 +110,21 @@ public class Event implements Serializable {
     public void setDateEvent(String dateEvent) {
         this.dateEvent = dateEvent;
     }
+
+    public String getTicketEvent() {
+        return ticketEvent;
+    }
+
+    public void setTicketEvent(String ticketEvent) {
+        this.ticketEvent = ticketEvent;
+    }
+
+    public String getDescriptionEvent() {
+        return descriptionEvent;
+    }
+
+    public void setDescriptionEvent(String descriptionEvent) {
+        this.descriptionEvent = descriptionEvent;
+    }
 }
+

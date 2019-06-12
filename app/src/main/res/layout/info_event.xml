@@ -9,48 +9,45 @@
 
 
     <TextView
-        android:id="@+id/horaEvento2"
+        android:id="@+id/newDescriptionEvent"
         android:layout_width="340dp"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="12dp"
-        android:text="Descriçao:  Festa de carnaval, bora aproveitar pessoal, bebidas free, muita musica e curticao!"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="16dp"
         android:textSize="14dp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/horaEvento3" />
+        app:layout_constraintTop_toBottomOf="@+id/newHourEvent" />
 
     <TextView
-        android:id="@+id/horaEvento3"
+        android:id="@+id/newNameEvent"
         android:layout_width="wrap_content"
         android:layout_height="19dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="12dp"
-        android:text="Nome do Evento"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
         android:textAlignment="center"
         android:textSize="14dp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/horaEvento" />
+        app:layout_constraintTop_toBottomOf="@+id/infoNameEvent" />
 
     <TextView
-        android:id="@+id/horaEvento"
+        android:id="@+id/newHourEvent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="14dp"
-        android:text="Horario: 23:00"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="20dp"
         android:textAlignment="center"
         android:textSize="14dp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/info_window_title" />
+        app:layout_constraintTop_toBottomOf="@+id/newNameEvent" />
 
     <TextView
-        android:id="@+id/info_window_title"
+        android:id="@+id/infoNameEvent"
         android:layout_width="229dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -70,9 +67,11 @@
         android:layout_height="95dp"
         android:layout_marginStart="140dp"
         android:layout_marginTop="6dp"
-        app:layout_constraintStart_toEndOf="@+id/horaEvento"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/newDescriptionEvent"
+        app:layout_constraintStart_toEndOf="@+id/newHourEvent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/garden" />
+        app:srcCompat="@drawable/evento" />
 
 
 </android.support.constraint.ConstraintLayout>

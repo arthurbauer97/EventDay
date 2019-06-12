@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,11 +19,15 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,11 +35,15 @@ import android.widget.Toast;
 
 import com.example.eventdayfinal.Fragments.ListFragment;
 import com.example.eventdayfinal.Fragments.MapsFragment;
-import com.example.eventdayfinal.Fragments.NewEventFragment;
-import com.example.eventdayfinal.Models.Place;
+import com.example.eventdayfinal.Fragments.MyEventsListFragment;
+import com.example.eventdayfinal.Models.Event;
 import com.example.eventdayfinal.Models.User;
 import com.example.eventdayfinal.R;
 import com.firebase.ui.auth.AuthUI;
+import com.github.rtoshiro.util.format.MaskFormatter;
+import com.github.rtoshiro.util.format.SimpleMaskFormatter;
+import com.github.rtoshiro.util.format.pattern.MaskPattern;
+import com.github.rtoshiro.util.format.text.MaskTextWatcher;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.ui.PlacePicker;
@@ -45,6 +55,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -69,6 +80,23 @@ public class MainActivity extends AppCompatActivity
     private BottomNavigationView bottomMenu;
 
 
+    //create event dialog
+    private AlertDialog.Builder builder;
+    private AlertDialog dialog;
+    private View view;
+    TextView criador_evento;
+    private EditText nameEvent;
+    private EditText dateEvent;
+    private EditText ticketEvent;
+    private EditText descriptionEvent;
+    private EditText hourEvent;
+    private ImageView newButtonAddPhoto;
+    private ImageView photo_event;
+    private Button selectLocationMap;
+
+    //event object
+    private Event event = new Event();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +107,6 @@ public class MainActivity extends AppCompatActivity
 
         //fica ouvindo o click no menu lateral
         navigationView.setNavigationItemSelectedListener(this);
-
 
         navigationViewHeader = navigationView.getHeaderView(0);
         menu = navigationView.getMenu();
@@ -98,7 +125,6 @@ public class MainActivity extends AppCompatActivity
         //fica ouvindo o click no menu inferior
         bottomMenu.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
-
         //botao para abrir o menu lateral
         drawerMenuButton = findViewById(R.id.drawer_menu_icon);
 
@@ -115,7 +141,6 @@ public class MainActivity extends AppCompatActivity
 
         //altera opcoes do menu conforme o usuario esta logado ou nao
         updateMenuOptions();
-
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content_frame,
@@ -138,15 +163,28 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
+//    @Override
+//    public void onBackPressed() {
+//
+//        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+//        if (drawer.isDrawerOpen(GravityCompat.START)) {
+//            drawer.closeDrawer(GravityCompat.START);
+//        } else {
+//            super.onBackPressed();
+//            loadFragment(new MapsFragment());
+//        }
+//    }
+//
+//    public boolean loadFragment(Fragment fragment){
+//        if (fragment != null){
+//            getSupportFragmentManager().beginTransaction()
+//                    .replace(R.id.content_frame,fragment)
+//                    .commit();
+//
+//            return true;
+//        }
+//        return false;
+//    }
 
     //startActivityForResult Callback
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -161,36 +199,145 @@ public class MainActivity extends AppCompatActivity
                 final com.google.android.gms.location.places.Place locationData = PlacePicker.getPlace(this, data);
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                createPlace(locationData);
+                insertEventIntoDatabase(locationData);
 
             }
         }
     }
+
+    //create event
+    private void dialogCreateEvent(){
+        builder = new AlertDialog.Builder(MainActivity.this);
+        view = getLayoutInflater().inflate(R.layout.dialog_new_event,null);
+
+
+        selectLocationMap = view.findViewById(R.id.buttonSelectLocationMap);
+
+        criador_evento = view.findViewById(R.id.nameCreator);
+        photo_event = view.findViewById(R.id.newPhotoEvent);
+        newButtonAddPhoto = view.findViewById(R.id.newButtonAddPhoto);
+        nameEvent = view.findViewById(R.id.newNameEvent);
+        descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
+        criador_evento.setText(firebaseUser.getDisplayName());
+
+
+        dateEvent = view.findViewById(R.id.newDateEvent);
+        SimpleMaskFormatter smfd = new SimpleMaskFormatter("NN/NN/NNNN");
+        MaskTextWatcher mtwd = new MaskTextWatcher(dateEvent, smfd);
+        dateEvent.addTextChangedListener(mtwd);
+
+        hourEvent = view.findViewById(R.id.newHourEvent);
+        SimpleMaskFormatter smfh = new SimpleMaskFormatter("NN:NN");
+        MaskTextWatcher mtwh = new MaskTextWatcher(hourEvent, smfh);
+        hourEvent.addTextChangedListener(mtwh);
+
+        ticketEvent = view.findViewById(R.id.newTicketEvent);
+        ticketEvent.addTextChangedListener(new MascaraMonetaria(ticketEvent));
+
+
+        builder.setView(view);
+        dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        newButtonAddPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectPhoto();
+            }
+        });
+
+        selectLocationMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isUserAuth()){
+                    if (!isEmpty()) {
+                        showEventPicker();
+                    }
+                    else{
+                        showSnackbar(R.color.colorGreen,R.string.is_empty);
+                    }
+                }
+                else showLoginDialogCreateEvent();
+            }
+        });
+        dialog.show();
+    }
+
+    //money mask
+
+
+    //mostra uma mensagem
+    private void showSnackbar(int color, int text) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.viewSnack), text, Snackbar.LENGTH_LONG);
+        snackbar.getView().setBackgroundColor(ContextCompat.getColor(this, color));
+        snackbar.show();
+    }
+
+    private boolean isEmpty() {
+        if (nameEvent.getText().toString().isEmpty() ||
+                dateEvent.getText().toString().isEmpty() ||
+                hourEvent.getText().toString().isEmpty() ||
+                ticketEvent.getText().toString().isEmpty() ||
+                descriptionEvent.getText().toString().isEmpty()) {
+            return true;
+
+        }else return false;
+    }
+    //select photo for event
+    private void selectPhoto(){
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent,0);
+    }
+
+//        private void updatePhoto(Uri selectedUri){
+//        String fileName = UUID.randomUUID().toString();
+//        final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
+//        ref.putFile(selectedUri)
+//                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//                    @Override
+//                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                            @Override
+//                            public void onSuccess(Uri uri) {
+//                                String urlPhoto = uri.toString();
+//
+//                            }
+//                        });
+//                    }
+//                });
+//    }
     //--------------------------------------DATABASE METHODS----------------------------------------
 
-    //insere uma place no firebase
-    public void createPlace(com.google.android.gms.location.places.Place locationData){
-        final Place place = new Place(
-                locationData.getId(),
-                locationData.getName().toString(),
-                locationData.getLatLng().latitude,
-                locationData.getLatLng().longitude,
-                locationData.getAddress().toString()
-        );
+    //insere uma event no firebase
+    public void insertEventIntoDatabase(com.google.android.gms.location.places.Place locationData){
 
-        DocumentReference ref = db.collection("places").document();
+        event.setAdress(locationData.getAddress().toString());
+        event.setLatitude(locationData.getLatLng().latitude);
+        event.setLogintude(locationData.getLatLng().longitude);
+
+        event.setNameEvent(nameEvent.getText().toString());
+        event.setTicketEvent(ticketEvent.getText().toString());
+        event.setDescriptionEvent(descriptionEvent.getText().toString());
+        event.setHourEvent(hourEvent.getText().toString());
+        event.setDateEvent(dateEvent.getText().toString());
+
+        DocumentReference ref = db.collection("events").document();
+        event.setIdEvent(ref.getId());
+        event.setIdUser(firebaseAuth.getCurrentUser().getUid());
             ref.
-                    set(place)
+                    set(event)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Log.i("Success", place.getIdPlace());
+                            showSnackbar(R.color.colorGreen,R.string.event_sucess);
+                            dialog.hide();
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Log.e("Success", place.getIdPlace());
+                            Log.e("Error", event.getIdEvent());
                         }
                     });
     }
@@ -199,7 +346,7 @@ public class MainActivity extends AppCompatActivity
     private void insertNewUserIntoDatabase() {
         final User userData  = new User(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getEmail());
 
-        DocumentReference ref = db.collection("users").document();
+        DocumentReference ref = db.collection("users").document(firebaseAuth.getCurrentUser().getUid());
             ref.
                     set(userData)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -221,9 +368,27 @@ public class MainActivity extends AppCompatActivity
         return firebaseUser != null;
     }
     //Mensagem de alerta para que se usuario queira fazer isso precisa estar logado
-    public void showLoginDialog() {
+    public void showLoginDialogCreateEvent() {
         final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
         alertBuilder.setMessage(R.string.do_login_alert_message)
+                .setPositiveButton(R.string.do_login_alert_option_1, new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        auth();
+                    }
+                })
+                .setNegativeButton(R.string.do_login_alert_option_2, new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setCancelable(false);
+        final AlertDialog alert = alertBuilder.create();
+        alert.show();
+    }
+
+    public void showLoginDialogMyEvents() {
+        final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+        alertBuilder.setMessage(R.string.do_login_my_events)
                 .setPositiveButton(R.string.do_login_alert_option_1, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         auth();
@@ -257,7 +422,7 @@ public class MainActivity extends AppCompatActivity
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
                                     .setIsSmartLockEnabled(false, true)
-                                    .setAvailableProviders(Collections.singletonList( //this is good for performance
+                                    .setAvailableProviders(Collections.singletonList(
                                             new AuthUI.IdpConfig.GoogleBuilder().build()))
                                     .build(),
                             123);
@@ -267,7 +432,6 @@ public class MainActivity extends AppCompatActivity
         //Isso sera chamado apos a primeira verificaçao do usuario autenticado, para aplicar as opçoes
         firebaseAuth.addAuthStateListener(authStateListener);
     }
-
 
     private void logout() {
         //desloga
@@ -284,7 +448,6 @@ public class MainActivity extends AppCompatActivity
         firebaseAuth.removeAuthStateListener(authStateListener);
     }
 
-
     private void changeAccount() {
         firebaseUser = null;
         firebaseAuth.signOut();
@@ -293,8 +456,6 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(this, "Trocando de conta!", Toast.LENGTH_SHORT).show();
         auth();
     }
-
-
     //------------------------------------- UI Methods----------------------------------------------
     //fecha a activity main
     private void closeNavigationDrawer() {
@@ -311,16 +472,18 @@ public class MainActivity extends AppCompatActivity
         if(!isUserAuth()) {
             menu.findItem(R.id.nav_logout).setVisible(false);
             menu.findItem(R.id.nav_change_account).setVisible(false);
+            menu.findItem(R.id.nav_login).setVisible(true);
         } else {
             menu.findItem(R.id.nav_logout).setVisible(true);
             menu.findItem(R.id.nav_change_account).setVisible(true);
+            menu.findItem(R.id.nav_login).setVisible(false);
         }
     }
 
-    //desmarca o item do menu lateral
-    private void unmarkMenuItem(int resourceId) {
-        menu.findItem(resourceId).setChecked(false);
-    }
+//    //desmarca o item do menu lateral
+//    private void unmarkMenuItem(int resourceId) {
+//        menu.findItem(resourceId).setChecked(false);
+//    }
 
     //Atualiza informaçoes do usuario atualmente
     private void updateUserUIInfo() {
@@ -337,14 +500,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //mostra uma mensagem
-    private void showSnackbar(int color, int text) {
-        Snackbar snackbar = Snackbar.make(findViewById(R.id.viewSnack), text, Snackbar.LENGTH_LONG);
-        snackbar.getView().setBackgroundColor(ContextCompat.getColor(this, color));
-        snackbar.show();
-    }
-
-
     @Override
     //switch case para as opcoes do menu lateral
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -353,17 +508,20 @@ public class MainActivity extends AppCompatActivity
         switch(id) {
             case R.id.nav_new_event:
                 if(isUserAuth()) {
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.content_frame,
-                                    new NewEventFragment()).addToBackStack(null).commit();
-                } else showLoginDialog();
-                break;
-            case R.id.nav_events:
-                Toast.makeText(this, "To be implemented", Toast.LENGTH_SHORT).show();
+                dialogCreateEvent();
+            } else showLoginDialogCreateEvent();
                 break;
 
-            case R.id.nav_settings:
-                Toast.makeText(this, "To be implemented", Toast.LENGTH_SHORT).show();
+            case R.id.nav_my_events:
+                if(isUserAuth()) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.content_frame,
+                                    new MyEventsListFragment()).addToBackStack(null).commit();
+                } else showLoginDialogMyEvents();
+                break;
+
+            case R.id.nav_login:
+                auth();
                 break;
 
             case R.id.nav_logout:
@@ -406,10 +564,8 @@ public class MainActivity extends AppCompatActivity
                     return true;
                 case R.id.bottom_nav_new_event:
                     if(isUserAuth()) {
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.content_frame,
-                                        new NewEventFragment()).addToBackStack(null).commit();
-                    } else showLoginDialog();
+                        dialogCreateEvent();
+                    } else showLoginDialogCreateEvent();
                     break;
             }
             return false;
@@ -443,6 +599,60 @@ public class MainActivity extends AppCompatActivity
 
         protected void onPostExecute(Bitmap result) {
             imageView.setImageBitmap(result);
+        }
+    }
+
+    private class MascaraMonetaria implements TextWatcher {
+
+        final EditText campo;
+
+        public MascaraMonetaria(EditText campo) {
+            super();
+            this.campo = campo;
+        }
+
+        private boolean isUpdating = false;
+
+        private NumberFormat nf = NumberFormat.getCurrencyInstance();
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int after) {
+            {
+                if (isUpdating) {
+                    isUpdating = false;
+                    return;
+                }
+
+                isUpdating = true;
+                String str = s.toString();
+                // Verifica se já existe a máscara no texto.
+                boolean hasMask = ((str.indexOf("R$") > -1 || str.indexOf("$") > -1) &&
+                        (str.indexOf(".") > -1 || str.indexOf(",") > -1));
+                // Verificamos se existe máscara
+                if (hasMask) {
+                    // Retiramos a máscara.
+                    str = str.replaceAll("[R$]", "").replaceAll("[,]", "")
+                            .replaceAll("[.]", "");
+                }
+                try {
+                    // Transformamos o número que está escrito no EditText em
+                    // monetário.
+                    str = nf.format(Double.parseDouble(str) / 100);
+                    campo.setText(str);
+                    campo.setSelection(campo.getText().length());
+                } catch (NumberFormatException e) {
+                    s = "";
+                }
+            }
+        }
+
+                @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
         }
     }
 

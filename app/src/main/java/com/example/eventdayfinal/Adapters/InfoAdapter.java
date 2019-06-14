@@ -24,9 +24,6 @@ import java.util.List;
 
 public class InfoAdapter implements GoogleMap.InfoWindowAdapter {
     private View view;
-    public TextView nameEvent;
-//    private TextView hourEvent;
-//    private TextView descriptionEvent;
 
     private Context context;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -36,8 +33,7 @@ public class InfoAdapter implements GoogleMap.InfoWindowAdapter {
 
     @Override
     public View getInfoWindow(Marker marker) {
-        view = LayoutInflater.from(context
-        ).inflate(R.layout.info_event, null);
+        view = LayoutInflater.from(context).inflate(R.layout.info_event, null);
         renderInfo(marker);
         return view;
     }
@@ -57,37 +53,36 @@ public class InfoAdapter implements GoogleMap.InfoWindowAdapter {
         lat = marker.getPosition().latitude;
         lon = marker.getPosition().longitude;
 
-        nameEvent = view.findViewById(R.id.newNameEvent);
-//        descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
-//        hourEvent = view.findViewById(R.id.newHourEvent);
-        final ArrayList<Event> arrayList = new ArrayList<>();
-        db.collection("events")
-                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
-                        List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
-                        for (DocumentSnapshot doc : docs) {
-                            Event event = doc.toObject(Event.class);
-                            arrayList.add(event);
-                            }
-                    }
-                });
+       TextView nameEvent = view.findViewById(R.id.newNameEvent);
+       TextView descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
 
-        for (Event event : arrayList){
-            if (lat == event.getLatitude()){
-                nameEvent.setText(event.getNameEvent());
-            }
-        }
+       nameEvent.setText(marker.getTitle());
+       descriptionEvent.setText(marker.getSnippet());
+
     }
 
-//    public void teste(String name, String hour, String descript){
+
 //        nameEvent = view.findViewById(R.id.newNameEvent);
-//        descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
-//        hourEvent = view.findViewById(R.id.newHourEvent);
+////        descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
+////        hourEvent = view.findViewById(R.id.newHourEvent);
+//        final ArrayList<Event> arrayList = new ArrayList<>();
+//        db.collection("events")
+//                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
+//                        List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
+//                        for (DocumentSnapshot doc : docs) {
+//                            Event event = doc.toObject(Event.class);
+//                            arrayList.add(event);
+//                        }
+//                    }
+//                });
 //
-//        nameEvent.setText("oi");
-//        descriptionEvent.setText("teste");
-//        hourEvent.setText("11:00");
-//
+//        for (Event event : arrayList) {
+//            if (lat == event.getLatitude()) {
+//                nameEvent.setText(event.getNameEvent());
+//            }
+//        }
 //    }
+
 }

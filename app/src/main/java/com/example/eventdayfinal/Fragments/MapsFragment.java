@@ -128,7 +128,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
     private long lastTimeClicked;
     private Event eventFromBundle;
 
-    private ArrayList<Event> eventsArray = new ArrayList<>();
+    final ArrayList<Event> arrayListEvents = new ArrayList<>();
 
 
     @Override
@@ -278,18 +278,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
             }
         }, DEFAULT_DELAY_TIME);
 
-
-
         map.setOnInfoWindowClickListener(this);
         map.setInfoWindowAdapter(new InfoAdapter(getContext()));
     }
-
-
-//    private void fetchEventMarkerClick(){
-//            db.collection("events").whereEqualTo("nameEvent",mapMarkers)
-//                    .addSnapshotListener()
-//
-//    }
 
     //--------------------------------LOCATION AND MAP DATA METHODS---------------------------------
 
@@ -309,6 +300,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         MarkerOptions options = new MarkerOptions()
                 .position(latLng1)
                 .title(title)
+                .snippet(date + "\n" + hour + "\n" + description)
                 .draggable(false)
                 .icon(BitmapDescriptorFactory
                         .fromBitmap(getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_maps_marker)));
@@ -324,6 +316,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                         List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
                         for(DocumentSnapshot doc:docs) {
                             Event event = doc.toObject(Event.class);
+                            arrayListEvents.add(event);
                             mapMarkers.put(event.getIdEvent(),
                                     addMarkerIntoMaps(event.getLatitude(),
                                             event.getLogintude(),

@@ -21,7 +21,7 @@
         app:srcCompat="@drawable/dialog" />
 
     <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/newPhotoEvent"
+        android:id="@+id/PhotoEvent"
         android:layout_width="120dp"
         android:layout_height="100dp"
         android:layout_marginTop="40dp"
@@ -44,7 +44,7 @@
         app:layout_constraintEnd_toEndOf="@+id/imageView3"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/imageView3"
-        app:layout_constraintTop_toBottomOf="@+id/newPhotoEvent">
+        app:layout_constraintTop_toBottomOf="@+id/PhotoEvent">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/NameEvent"

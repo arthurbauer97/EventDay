@@ -10,15 +10,26 @@
   <android.support.constraint.ConstraintLayout
       android:id="@+id/constraintLayout"
       android:layout_width="0dp"
-      android:layout_height="90dp"
+      android:layout_height="93dp"
       app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toEndOf="@+id/imageView2"
+      app:layout_constraintStart_toEndOf="@+id/photoMyEVent"
       app:layout_constraintTop_toTopOf="parent">
 
 
     <TextView
+        android:id="@+id/place_date_listview"
+        android:layout_width="match_parent"
+        android:layout_height="15dp"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="5dp"
+        android:text="Data"
+        android:textSize="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/place_hour_listview" />
+
+    <TextView
         android:id="@+id/place_name_listview"
-        android:layout_width="280dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:text="Nome do Evento"
@@ -32,33 +43,88 @@
         android:id="@+id/place_adress_listview"
         android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="6dp"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="5dp"
         android:text="Endereço"
         android:textSize="12dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/place_name_listview" />
+        app:layout_constraintTop_toBottomOf="@+id/place_date_listview" />
 
     <TextView
         android:id="@+id/place_hour_listview"
         android:layout_width="match_parent"
         android:layout_height="15dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="7dp"
         android:text="Horário"
         android:textSize="12dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/place_adress_listview" />
+        app:layout_constraintTop_toBottomOf="@+id/place_name_listview" />
+
+    <ImageView
+        android:id="@+id/imageView4"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/place_date_listview"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView5"
+        app:srcCompat="@drawable/date_event" />
+
+    <ImageView
+        android:id="@+id/imageView5"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/place_hour_listview"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/place_name_listview"
+        app:srcCompat="@drawable/hour_event" />
+
+    <ImageView
+        android:id="@+id/imageView6"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/place_adress_listview"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView4"
+        app:srcCompat="@drawable/local_event" />
   </android.support.constraint.ConstraintLayout>
 
-  <ImageView
-      android:id="@+id/imageView2"
-      android:layout_width="111dp"
-      android:layout_height="90dp"
+  <de.hdodenhof.circleimageview.CircleImageView
+      android:id="@+id/photoMyEVent"
+      android:layout_width="120dp"
+      android:layout_height="100dp"
+      android:src="@drawable/attach"
+      app:civ_border_color="@color/colorGreen"
+      app:civ_border_width="2dp"
       app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintEnd_toStartOf="@+id/constraintLayout"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.0"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent"
-      app:srcCompat="@drawable/evento" />
+      tools:srcCompat="@tools:sample/avatars[0]" />
+
+  <TextView
+      android:id="@+id/noEvents"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="8dp"
+      android:layout_marginTop="8dp"
+      android:layout_marginEnd="8dp"
+      android:layout_marginBottom="8dp"
+      android:text="Voce nao possui eventos proximos!"
+      android:textColor="@color/colorGreen"
+      android:textSize="18sp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="@+id/photoMyEVent"
+      app:layout_constraintTop_toTopOf="parent" />
+
 
 </android.support.constraint.ConstraintLayout>

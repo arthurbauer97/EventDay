@@ -9,50 +9,40 @@
 
 
     <TextView
-        android:id="@+id/newDescriptionEvent"
-        android:layout_width="340dp"
-        android:layout_height="0dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="16dp"
-        android:textSize="14dp"
+        android:id="@+id/date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="14dp"
+        android:text="Data:"
+        android:textColor="@color/colorGreen"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/newHourEvent" />
+        app:layout_constraintTop_toBottomOf="@+id/hour" />
 
     <TextView
-        android:id="@+id/newNameEvent"
+        android:id="@+id/infoDescriptionEvent"
         android:layout_width="wrap_content"
-        android:layout_height="19dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:textAlignment="center"
         android:textSize="14dp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageView"
+        app:layout_constraintHorizontal_bias="0.025"
+        app:layout_constraintStart_toEndOf="@+id/date"
         app:layout_constraintTop_toBottomOf="@+id/infoNameEvent" />
 
     <TextView
-        android:id="@+id/newHourEvent"
+        android:id="@+id/infoNameEvent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="20dp"
-        android:textAlignment="center"
-        android:textSize="14dp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/newNameEvent" />
-
-    <TextView
-        android:id="@+id/infoNameEvent"
-        android:layout_width="229dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="6dp"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="8dp"
         android:text="Formatura Ulbra"
         android:textAlignment="center"
         android:textColor="@color/colorGreen"
@@ -63,15 +53,25 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="136dp"
-        android:layout_height="95dp"
-        android:layout_marginStart="140dp"
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/newDescriptionEvent"
-        app:layout_constraintStart_toEndOf="@+id/newHourEvent"
+        android:layout_width="62dp"
+        android:layout_height="54dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="28dp"
+        app:layout_constraintStart_toEndOf="@+id/infoNameEvent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/evento" />
+        app:srcCompat="@drawable/information" />
+
+    <TextView
+        android:id="@+id/hour"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="8dp"
+        android:text="Horário:"
+        android:textColor="@color/colorGreen"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/infoNameEvent" />
 
 
 </android.support.constraint.ConstraintLayout>

@@ -62,9 +62,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.example.eventdayfinal.Adapters.InfoAdapter;
@@ -300,7 +303,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         MarkerOptions options = new MarkerOptions()
                 .position(latLng1)
                 .title(title)
-                .snippet(date + "\n" + hour + "\n" + description)
+                .snippet(hour + "\n\n" + date)
                 .draggable(false)
                 .icon(BitmapDescriptorFactory
                         .fromBitmap(getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_maps_marker)));
@@ -316,17 +319,40 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                         List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
                         for(DocumentSnapshot doc:docs) {
                             Event event = doc.toObject(Event.class);
-                            arrayListEvents.add(event);
-                            mapMarkers.put(event.getIdEvent(),
-                                    addMarkerIntoMaps(event.getLatitude(),
-                                            event.getLogintude(),
-                                            event.getNameEvent(),
-                                            event.getDateEvent(),
-                                            event.getHourEvent(),
-                                            event.getDescriptionEvent()));
+                            if(validDate(event.getDateEvent())) {
+                                arrayListEvents.add(event);
+                                mapMarkers.put(event.getIdEvent(),
+                                        addMarkerIntoMaps(event.getLatitude(),
+                                                event.getLogintude(),
+                                                event.getNameEvent(),
+                                                event.getDateEvent(),
+                                                event.getHourEvent(),
+                                                event.getDescriptionEvent()));
+                            }
                         }
                     }
                 });
+    }
+
+    private boolean validDate(String dateEvent){
+        Date date = new Date();
+        String dateDay = getFormattedDate(date);
+        String dateDaySplit[] = dateDay.split("/");
+        String dateEventSplit[] = dateEvent.split("/");
+
+        long date1 = Long.parseLong(dateDaySplit[2] + dateDaySplit[1] + dateDaySplit[0]);
+        long date2 = Long.parseLong(dateEventSplit[2] + dateEventSplit[1] + dateEventSplit[0]);
+
+        if(date2 < date1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private String getFormattedDate(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        return simpleDateFormat.format(date);
     }
 
     //Moves the camera to the location, accordingly with the option selected (animate or just move)
@@ -531,20 +557,3 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
         noGpsSnackbar.show();
     }
 }
-
-//    private void showConfirmInsertLastPlaceDialog() {
-//        final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
-//        alertBuilder.setMessage(R.string.new_place_from_marker_message)
-//                .setPositiveButton(R.string.do_login_alert_option_1, new DialogInterface.OnClickListener() {
-//                    public void onClick(final DialogInterface dialog, final int id) {
-//                    }
-//                })
-//                .setNegativeButton(R.string.do_login_alert_option_2, new DialogInterface.OnClickListener() {
-//                    public void onClick(final DialogInterface dialog, final int id) {
-//                        dialog.cancel();
-//                    }
-//                })
-//                .setCancelable(false);
-//        final AlertDialog alert = alertBuilder.create();
-//        alert.show();
-//    }

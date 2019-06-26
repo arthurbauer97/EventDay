@@ -23,8 +23,11 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import com.example.eventdayfinal.Adapters.EventsAdapter;
 import com.example.eventdayfinal.Models.Event;
@@ -36,6 +39,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.squareup.picasso.Picasso;
 
 public class ListFragment extends Fragment{
 
@@ -110,8 +114,10 @@ public class ListFragment extends Fragment{
 
                             if (event != null) {
                                 if (FirebaseUtils.distanceFromDatabasePlace(MapsFragment.currentLocation, event) < DEFAULT_PLACES_DISTANCE) {
-                                    eventsArray.add(event);
-                                    noResultsTextView.setVisibility(View.GONE);
+                                    if(validDate(event.getDateEvent())) {
+                                        eventsArray.add(event);
+                                        noResultsTextView.setVisibility(View.GONE);
+                                    }
                                 }
                             }
                             eventsListView.setAdapter(new EventsAdapter(getContext(), eventsArray));
@@ -120,14 +126,40 @@ public class ListFragment extends Fragment{
                 });
     }
 
-    //create event
+    private boolean validDate(String dateEvent){
+        Date date = new Date();
+        String dateDay = getFormattedDate(date);
+        String dateDaySplit[] = dateDay.split("/");
+        String dateEventSplit[] = dateEvent.split("/");
+
+        long date1 = Long.parseLong(dateDaySplit[2] + dateDaySplit[1] + dateDaySplit[0]);
+        long date2 = Long.parseLong(dateEventSplit[2] + dateEventSplit[1] + dateEventSplit[0]);
+
+        if(date2 < date1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private String getFormattedDate(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        return simpleDateFormat.format(date);
+    }
+
+
     private void loadEvent(Event event){
         builder = new AlertDialog.Builder(getContext());
         view = getLayoutInflater().inflate(R.layout.dialog_all_event,null);
 
         viewInMap = view.findViewById(R.id.viewInMap);
 
-//        photoEvent = view.findViewById(R.id.PhotoEvent);
+        photoEvent = view.findViewById(R.id.newPhotoEvent);
+        if (event.getUrlPhoto() != null){
+            Picasso.get()
+                    .load(event.getUrlPhoto())
+                    .into(photoEvent);
+        }
         dateEvent = view.findViewById(R.id.DateEvent);
         nameEvent = view.findViewById(R.id.NameEvent);
         hourEvent = view.findViewById(R.id.HourEvent);

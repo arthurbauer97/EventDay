@@ -53,36 +53,12 @@ public class InfoAdapter implements GoogleMap.InfoWindowAdapter {
         lat = marker.getPosition().latitude;
         lon = marker.getPosition().longitude;
 
-       TextView nameEvent = view.findViewById(R.id.newNameEvent);
-       TextView descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
+       TextView nameEvent = view.findViewById(R.id.infoNameEvent);
+       TextView descriptionEvent = view.findViewById(R.id.infoDescriptionEvent);
 
        nameEvent.setText(marker.getTitle());
        descriptionEvent.setText(marker.getSnippet());
 
     }
-
-
-//        nameEvent = view.findViewById(R.id.newNameEvent);
-////        descriptionEvent = view.findViewById(R.id.newDescriptionEvent);
-////        hourEvent = view.findViewById(R.id.newHourEvent);
-//        final ArrayList<Event> arrayList = new ArrayList<>();
-//        db.collection("events")
-//                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
-//                        List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
-//                        for (DocumentSnapshot doc : docs) {
-//                            Event event = doc.toObject(Event.class);
-//                            arrayList.add(event);
-//                        }
-//                    }
-//                });
-//
-//        for (Event event : arrayList) {
-//            if (lat == event.getLatitude()) {
-//                nameEvent.setText(event.getNameEvent());
-//            }
-//        }
-//    }
 
 }

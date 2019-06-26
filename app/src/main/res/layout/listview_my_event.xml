@@ -12,7 +12,7 @@
       android:layout_width="0dp"
       android:layout_height="90dp"
       app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toEndOf="@+id/imageView2"
+      app:layout_constraintStart_toEndOf="@+id/photoMyEVent"
       app:layout_constraintTop_toTopOf="parent">
 
 
@@ -52,14 +52,18 @@
         app:layout_constraintTop_toBottomOf="@+id/place_adress_listview" />
   </android.support.constraint.ConstraintLayout>
 
-  <ImageView
-      android:id="@+id/imageView2"
-      android:layout_width="111dp"
-      android:layout_height="90dp"
+  <de.hdodenhof.circleimageview.CircleImageView
+      android:id="@+id/photoMyEVent"
+      android:layout_width="120dp"
+      android:layout_height="100dp"
+      android:src="@drawable/attach"
+      app:civ_border_color="@color/colorGreen"
+      app:civ_border_width="2dp"
       app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintEnd_toStartOf="@+id/constraintLayout"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.0"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent"
-      app:srcCompat="@drawable/evento" />
+      tools:srcCompat="@tools:sample/avatars[0]" />
 
 </android.support.constraint.ConstraintLayout>

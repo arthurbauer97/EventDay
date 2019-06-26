@@ -3,9 +3,13 @@ package com.example.eventdayfinal.Fragments;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -19,8 +23,10 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,11 +45,22 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+
+import static android.app.Activity.RESULT_OK;
 
 
 public class MyEventsListFragment extends Fragment{
@@ -59,20 +76,19 @@ public class MyEventsListFragment extends Fragment{
     private AlertDialog.Builder builder;
     private AlertDialog dialog;
     private View view;
-    TextView criador_evento;
     private EditText nameEvent;
     private EditText dateEvent;
     private EditText ticketEvent;
     private EditText descriptionEvent;
     private EditText hourEvent;
-    private ImageView newButtonAddPhoto;
     private ImageView photo_event;
-    private Button editEvents;
-    private Button editDataEvents;
+    private ImageButton editPhotoEvent;
+    private Button buttonSaveEvent;
     private ImageView editEvent;
     private ImageView deleteEvent;
-    private int idDelete;
 
+    private Uri selectedUri;
+    private String photo;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
@@ -85,6 +101,7 @@ public class MyEventsListFragment extends Fragment{
 
         myEventsListView = view.findViewById(R.id.events_mylistview);
         noResultsTextView = view.findViewById(R.id.no_result_textview);
+
 
         if (eventsArray != null) {
             fetchEvents();
@@ -106,6 +123,22 @@ public class MyEventsListFragment extends Fragment{
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 0 && resultCode == RESULT_OK && data != null) {
+            selectedUri = data.getData();
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), selectedUri);
+                photo_event.setImageDrawable(new BitmapDrawable(bitmap));
+                savePhoto();
+            } catch (IOException e) {
+            }
+        }
+    }
+
+    @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {super.onViewCreated(view, savedInstanceState);}
 
     //load event
@@ -117,6 +150,12 @@ public class MyEventsListFragment extends Fragment{
         deleteEvent = view.findViewById(R.id.deleteEvent);
         editEvent = view.findViewById(R.id.editEvent);
 
+        photo_event = view.findViewById(R.id.PhotoEvent);
+        if (event.getUrlPhoto() != null){
+            Picasso.get()
+                    .load(event.getUrlPhoto())
+                    .into(photo_event);
+        }
 
         dateEvent = view.findViewById(R.id.DateEvent);
         nameEvent = view.findViewById(R.id.NameEvent);
@@ -160,9 +199,25 @@ public class MyEventsListFragment extends Fragment{
         builder = new AlertDialog.Builder(getContext());
         view = getLayoutInflater().inflate(R.layout.dialog_edit_event,null);
 
-        editDataEvents = view.findViewById(R.id.buttonEditDataEvent);
+        buttonSaveEvent = view.findViewById(R.id.buttonSaveEvent);
         nameEvent = view.findViewById(R.id.editNameEvent);
         descriptionEvent = view.findViewById(R.id.editDescriptionEvent);
+
+        //carrega a foto do evento caso exista
+        photo_event = view.findViewById(R.id.newPhotoEvent);
+        if (event.getUrlPhoto() != null){
+            Picasso.get()
+                    .load(event.getUrlPhoto())
+                    .into(photo_event);
+        }
+
+        editPhotoEvent = view.findViewById(R.id.buttonEditPhoto);
+        editPhotoEvent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectPhoto();
+            }
+        });
 
         dateEvent = view.findViewById(R.id.editDateEvent);
         SimpleMaskFormatter smfd = new SimpleMaskFormatter("NN/NN/NNNN");
@@ -184,10 +239,20 @@ public class MyEventsListFragment extends Fragment{
         descriptionEvent.setText(event.getDescriptionEvent());
 
 
-        editDataEvents.setOnClickListener(new View.OnClickListener() {
+        buttonSaveEvent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDataEvents();
+                if (!isEmpty()) {
+                    if (checkDateFormat(dateEvent.getText().toString())){
+                        if (checkHourFormat(hourEvent.getText().toString())) {
+                            updateDataEvents();
+                        }else
+                            hourEvent.setError("Hora invalida");
+                    } else
+                        dateEvent.setError("Data invalida");
+                } else {
+                    Toast.makeText(getContext(), "Preencha todos os campos", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -212,13 +277,16 @@ public class MyEventsListFragment extends Fragment{
         event.setDescriptionEvent(descriptionEvent.getText().toString());
         event.setHourEvent(hourEvent.getText().toString());
         event.setDateEvent(dateEvent.getText().toString());
+        event.setUrlPhoto(photo);
+
 
         db.collection("events").document(event.getIdEvent())
                 .update("nameEvent",event.getNameEvent(),
                         "hourEvent",event.getHourEvent(),
                         "dateEvent", event.getDateEvent(),
                         "ticketEvent",event.getTicketEvent(),
-                        "descriptionEvent", event.getDescriptionEvent())
+                        "descriptionEvent", event.getDescriptionEvent(),
+                        "urlPhoto", event.getUrlPhoto())
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -234,6 +302,32 @@ public class MyEventsListFragment extends Fragment{
         startActivity(it);
     }
 
+
+    //select photo for event
+    private void selectPhoto() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, 0);
+    }
+
+
+    private void savePhoto() {
+        String fileName = UUID.randomUUID().toString();
+        final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
+        ref.putFile(selectedUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                photo = uri.toString();
+                                Toast.makeText(getContext(), "Foto Salva", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
+    }
 
     //tras o eventos do banco e coloca todos no mapa
     private void fetchEvents() {
@@ -262,7 +356,7 @@ public class MyEventsListFragment extends Fragment{
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Toast.makeText(getContext(), "evento deletado com sucesso", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Evento deletado", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -277,6 +371,32 @@ public class MyEventsListFragment extends Fragment{
         return firebaseUser != null;
     }
 
+
+    public boolean checkDateFormat(String dateEvent) {
+        Date date = null;
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+        try {
+            format.setLenient(false);
+            date = format.parse(dateEvent);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    public boolean checkHourFormat(String dateHour){
+        String time[] = dateHour.split(":");
+        int h = Integer.parseInt(time[0]);
+        int m = Integer.parseInt(time[1]);
+
+        if ((h < 0 || h > 23) || (m < 0 || m > 59)){
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
     private boolean isEmpty() {
         if (nameEvent.getText().toString().isEmpty() ||
                 dateEvent.getText().toString().isEmpty() ||
@@ -285,8 +405,9 @@ public class MyEventsListFragment extends Fragment{
                 descriptionEvent.getText().toString().isEmpty()) {
             return true;
 
-        }else return false;
+        } else return false;
     }
+
     private class MascaraMonetaria implements TextWatcher {
 
         final EditText campo;

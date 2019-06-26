@@ -7,9 +7,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.NavigationView;
@@ -53,11 +56,20 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -79,6 +91,8 @@ public class MainActivity extends AppCompatActivity
     private ImageButton drawerMenuButton;
     private BottomNavigationView bottomMenu;
 
+
+    private Uri selectedUri;
 
     //create event dialog
     private AlertDialog.Builder builder;
@@ -150,7 +164,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if(authStateListener != null) {
+        if (authStateListener != null) {
             firebaseAuth.addAuthStateListener(authStateListener);
         }
     }
@@ -158,33 +172,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        if(authStateListener != null) {
+        if (authStateListener != null) {
             firebaseAuth.removeAuthStateListener(authStateListener);
         }
     }
 
-//    @Override
-//    public void onBackPressed() {
-//
-//        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-//        if (drawer.isDrawerOpen(GravityCompat.START)) {
-//            drawer.closeDrawer(GravityCompat.START);
-//        } else {
-//            super.onBackPressed();
-//            loadFragment(new MapsFragment());
-//        }
-//    }
-//
-//    public boolean loadFragment(Fragment fragment){
-//        if (fragment != null){
-//            getSupportFragmentManager().beginTransaction()
-//                    .replace(R.id.content_frame,fragment)
-//                    .commit();
-//
-//            return true;
-//        }
-//        return false;
-//    }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        moveTaskToBack(true);
+    }
 
     //startActivityForResult Callback
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -200,15 +197,29 @@ public class MainActivity extends AppCompatActivity
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 insertEventIntoDatabase(locationData);
-
+                Toast.makeText(this, "Evento Adicionado!", Toast.LENGTH_SHORT).show();
             }
         }
+
+
+        //photo callback
+        if (requestCode == 0 && resultCode == RESULT_OK && data != null) {
+            selectedUri = data.getData();
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedUri);
+                photo_event.setImageDrawable(new BitmapDrawable(bitmap));
+                savePhoto();
+            } catch (IOException e) {
+            }
+        }
+
     }
 
-    //create event
-    private void dialogCreateEvent(){
+    //criar evento
+    private void dialogCreateEvent() {
         builder = new AlertDialog.Builder(MainActivity.this);
-        view = getLayoutInflater().inflate(R.layout.dialog_new_event,null);
+        view = getLayoutInflater().inflate(R.layout.dialog_new_event, null);
 
 
         selectLocationMap = view.findViewById(R.id.buttonSelectLocationMap);
@@ -234,7 +245,6 @@ public class MainActivity extends AppCompatActivity
         ticketEvent = view.findViewById(R.id.newTicketEvent);
         ticketEvent.addTextChangedListener(new MascaraMonetaria(ticketEvent));
 
-
         builder.setView(view);
         dialog = builder.create();
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -249,28 +259,46 @@ public class MainActivity extends AppCompatActivity
         selectLocationMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isUserAuth()){
+                if (isUserAuth()) {
                     if (!isEmpty()) {
-                        showEventPicker();
+                        if (checkDateFormat(dateEvent.getText().toString())) {
+                            if (checkHourFormat(hourEvent.getText().toString())) {
+                                showEventPicker();
+                            } else
+                                hourEvent.setError("Hora invalida");
+                        } else
+                            dateEvent.setError("Data invalida");
+                    } else {
+                        Toast.makeText(MainActivity.this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
                     }
-                    else{
-                        showSnackbar(R.color.colorGreen,R.string.is_empty);
-                    }
-                }
-                else showLoginDialogCreateEvent();
+                } else showLoginDialogCreateEvent();
             }
         });
         dialog.show();
     }
 
-    //money mask
+    public boolean checkHourFormat(String dateHour) {
+        String time[] = dateHour.split(":");
+        int h = Integer.parseInt(time[0]);
+        int m = Integer.parseInt(time[1]);
 
+        if ((h < 0 || h > 23) || (m < 0 || m > 59)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-    //mostra uma mensagem
-    private void showSnackbar(int color, int text) {
-        Snackbar snackbar = Snackbar.make(findViewById(R.id.viewSnack), text, Snackbar.LENGTH_LONG);
-        snackbar.getView().setBackgroundColor(ContextCompat.getColor(this, color));
-        snackbar.show();
+    public boolean checkDateFormat(String dateEvent) {
+        Date date = null;
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+        try {
+            format.setLenient(false);
+            date = format.parse(dateEvent);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
     }
 
     private boolean isEmpty() {
@@ -281,36 +309,47 @@ public class MainActivity extends AppCompatActivity
                 descriptionEvent.getText().toString().isEmpty()) {
             return true;
 
-        }else return false;
-    }
-    //select photo for event
-    private void selectPhoto(){
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent,0);
+        } else return false;
     }
 
-//        private void updatePhoto(Uri selectedUri){
-//        String fileName = UUID.randomUUID().toString();
-//        final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
-//        ref.putFile(selectedUri)
-//                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                    @Override
-//                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                            @Override
-//                            public void onSuccess(Uri uri) {
-//                                String urlPhoto = uri.toString();
-//
-//                            }
-//                        });
-//                    }
-//                });
-//    }
+
+    //mostra uma mensagem
+    private void showSnackbar(int color, int text) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.viewSnack), text, Snackbar.LENGTH_LONG);
+        snackbar.getView().setBackgroundColor(ContextCompat.getColor(this, color));
+        snackbar.show();
+    }
+
+    //select photo for event
+    private void selectPhoto() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, 0);
+    }
+
+
+    private void savePhoto() {
+        String fileName = UUID.randomUUID().toString();
+
+        final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
+
+        ref.putFile(selectedUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                event.setUrlPhoto(uri.toString());
+                            }
+                        });
+                    }
+                });
+    }
     //--------------------------------------DATABASE METHODS----------------------------------------
 
     //insere uma event no firebase
-    public void insertEventIntoDatabase(com.google.android.gms.location.places.Place locationData){
+    public void insertEventIntoDatabase(com.google.android.gms.location.places.Place locationData) {
 
         event.setAdress(locationData.getAddress().toString());
         event.setLatitude(locationData.getLatLng().latitude);
@@ -325,48 +364,49 @@ public class MainActivity extends AppCompatActivity
         DocumentReference ref = db.collection("events").document();
         event.setIdEvent(ref.getId());
         event.setIdUser(firebaseAuth.getCurrentUser().getUid());
-            ref.
-                    set(event)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            showSnackbar(R.color.colorGreen,R.string.event_sucess);
-                            dialog.hide();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.e("Error", event.getIdEvent());
-                        }
-                    });
+        ref.
+                set(event)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        showSnackbar(R.color.colorGreen, R.string.event_sucess);
+                        dialog.hide();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("Error", event.getIdEvent());
+                    }
+                });
     }
 
     // insere usuario no firebase
     private void insertNewUserIntoDatabase() {
-        final User userData  = new User(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getEmail());
+        final User userData = new User(firebaseUser.getUid(), firebaseUser.getDisplayName(), firebaseUser.getEmail());
 
         DocumentReference ref = db.collection("users").document(firebaseAuth.getCurrentUser().getUid());
-            ref.
-                    set(userData)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.i("Success", userData.getUserID());
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.e("Error",userData.getUserID());
-                        }
-                    });
+        ref.
+                set(userData)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.i("Success", userData.getUserID());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("Error", userData.getUserID());
+                    }
+                });
     }
     //-------------------------------------AUTH METHODS---------------------------------------------
 
     public boolean isUserAuth() {
         return firebaseUser != null;
     }
+
     //Mensagem de alerta para que se usuario queira fazer isso precisa estar logado
     public void showLoginDialogCreateEvent() {
         final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
@@ -410,7 +450,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
-                if(user != null) {
+                if (user != null) {
                     //se tiver usuario logado, mostra a opcao para adicionar Evento
                     firebaseUser = user;
                     insertNewUserIntoDatabase();
@@ -456,12 +496,8 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(this, "Trocando de conta!", Toast.LENGTH_SHORT).show();
         auth();
     }
-    //------------------------------------- UI Methods----------------------------------------------
-    //fecha a activity main
-    private void closeNavigationDrawer() {
-        drawer.closeDrawer(Gravity.START);
-    }
 
+    //------------------------------------- UI Methods----------------------------------------------
     //abre a activity main
     private void openNavigationDrawer() {
         drawer.openDrawer(Gravity.START);
@@ -469,7 +505,7 @@ public class MainActivity extends AppCompatActivity
 
     //muda as opcoes do menu lateral caso o usuario esteja logado ou nao
     private void updateMenuOptions() {
-        if(!isUserAuth()) {
+        if (!isUserAuth()) {
             menu.findItem(R.id.nav_logout).setVisible(false);
             menu.findItem(R.id.nav_change_account).setVisible(false);
             menu.findItem(R.id.nav_login).setVisible(true);
@@ -480,14 +516,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-//    //desmarca o item do menu lateral
-//    private void unmarkMenuItem(int resourceId) {
-//        menu.findItem(resourceId).setChecked(false);
-//    }
-
     //Atualiza informaçoes do usuario atualmente
     private void updateUserUIInfo() {
-        if(isUserAuth()) {
+        if (isUserAuth()) {
             navHeaderUserName.setText(firebaseUser.getDisplayName());
             navHeaderUserEmail.setText(firebaseUser.getEmail());
             new ProfileImageHandler(navHeaderPhoto)
@@ -505,15 +536,15 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        switch(id) {
+        switch (id) {
             case R.id.nav_new_event:
-                if(isUserAuth()) {
-                dialogCreateEvent();
-            } else showLoginDialogCreateEvent();
+                if (isUserAuth()) {
+                    dialogCreateEvent();
+                } else showLoginDialogCreateEvent();
                 break;
 
             case R.id.nav_my_events:
-                if(isUserAuth()) {
+                if (isUserAuth()) {
                     getSupportFragmentManager().beginTransaction()
                             .replace(R.id.content_frame,
                                     new MyEventsListFragment()).addToBackStack(null).commit();
@@ -545,7 +576,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-// menu inferior itens selecionados
+    // menu inferior itens selecionados
     private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -563,7 +594,7 @@ public class MainActivity extends AppCompatActivity
                                     new ListFragment()).addToBackStack(null).commit();
                     return true;
                 case R.id.bottom_nav_new_event:
-                    if(isUserAuth()) {
+                    if (isUserAuth()) {
                         dialogCreateEvent();
                     } else showLoginDialogCreateEvent();
                     break;
@@ -571,7 +602,6 @@ public class MainActivity extends AppCompatActivity
             return false;
         }
     };
-
 
 
     //classe interna que manipula exclusivamente o download e a configuração da imagem do perfil do usuário
@@ -602,6 +632,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    //mascara do dinheiro
     private class MascaraMonetaria implements TextWatcher {
 
         final EditText campo;
@@ -646,7 +677,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-                @Override
+        @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 

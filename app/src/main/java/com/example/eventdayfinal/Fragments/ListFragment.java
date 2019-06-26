@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.flags.IFlagProvider;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -64,6 +65,7 @@ public class ListFragment extends Fragment{
     private TextView ticketEvent;
     private TextView descriptionEvent;
     private TextView hourEvent;
+    private TextView noEvent;
     private ImageView newButtonAddPhoto;
     private ImageView photoEvent;
     private ImageView deleteEvent;
@@ -77,14 +79,18 @@ public class ListFragment extends Fragment{
         View view = inflater.inflate(R.layout.fragment_list_events, container, false);
 
         eventsListView = view.findViewById(R.id.events_listview);
-        noResultsTextView = view.findViewById(R.id.no_result_textview);
+        noEvent = view.findViewById(R.id.noEvents);
+        noEvent.setVisibility(View.INVISIBLE);
 
         if (MapsFragment.currentLocation != null && FirebaseAuth.getInstance() != null) {
             fetchEvents();
         } else {
-            noResultsTextView.setVisibility(View.VISIBLE);
+            noEvent.setVisibility(View.VISIBLE);
         }
 
+        if (eventsArray.isEmpty() == true){
+            noEvent.setVisibility(View.VISIBLE);
+        }
         eventsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -116,7 +122,7 @@ public class ListFragment extends Fragment{
                                 if (FirebaseUtils.distanceFromDatabasePlace(MapsFragment.currentLocation, event) < DEFAULT_PLACES_DISTANCE) {
                                     if(validDate(event.getDateEvent())) {
                                         eventsArray.add(event);
-                                        noResultsTextView.setVisibility(View.GONE);
+                                        noEvent.setVisibility(View.GONE);
                                     }
                                 }
                             }

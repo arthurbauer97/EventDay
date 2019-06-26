@@ -86,6 +86,7 @@ public class MyEventsListFragment extends Fragment{
     private Button buttonSaveEvent;
     private ImageView editEvent;
     private ImageView deleteEvent;
+    private TextView noEvent;
 
     private Uri selectedUri;
     private String photo;
@@ -100,13 +101,17 @@ public class MyEventsListFragment extends Fragment{
         View view = inflater.inflate(R.layout.fragment_list_my_events, container, false);
 
         myEventsListView = view.findViewById(R.id.events_mylistview);
-        noResultsTextView = view.findViewById(R.id.no_result_textview);
-
+        noEvent = view.findViewById(R.id.noEvents);
+        noEvent.setVisibility(View.INVISIBLE);
 
         if (eventsArray != null) {
             fetchEvents();
         } else {
             noResultsTextView.setVisibility(View.VISIBLE);
+        }
+
+        if (eventsArray.isEmpty() == true){
+            noEvent.setVisibility(View.VISIBLE);
         }
 
         myEventsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -245,7 +250,10 @@ public class MyEventsListFragment extends Fragment{
                 if (!isEmpty()) {
                     if (checkDateFormat(dateEvent.getText().toString())){
                         if (checkHourFormat(hourEvent.getText().toString())) {
-                            updateDataEvents();
+                            if (checkNameFormat(nameEvent.getText().toString())){
+                                updateDataEvents();
+                            }else
+                                nameEvent.setError("Nome invalido");
                         }else
                             hourEvent.setError("Hora invalida");
                     } else
@@ -371,6 +379,12 @@ public class MyEventsListFragment extends Fragment{
         return firebaseUser != null;
     }
 
+    public boolean checkNameFormat(String nameEvent){
+        if (nameEvent.length() > 25){
+            return false;
+        }
+        else return true;
+    }
 
     public boolean checkDateFormat(String dateEvent) {
         Date date = null;
@@ -385,16 +399,18 @@ public class MyEventsListFragment extends Fragment{
     }
 
     public boolean checkHourFormat(String dateHour){
-        String time[] = dateHour.split(":");
-        int h = Integer.parseInt(time[0]);
-        int m = Integer.parseInt(time[1]);
-
-        if ((h < 0 || h > 23) || (m < 0 || m > 59)){
+        if (dateHour.length() > 4){
+            String time[] = dateHour.split(":");
+            int h = Integer.parseInt(time[0]);
+            int m = Integer.parseInt(time[1]);
+            if ((h < 0 || h > 23) || (m < 0 || m > 59)){
+                return false;
+            }
+            else {
+                return true;
+            }
+        }else
             return false;
-        }
-        else {
-            return true;
-        }
     }
 
     private boolean isEmpty() {

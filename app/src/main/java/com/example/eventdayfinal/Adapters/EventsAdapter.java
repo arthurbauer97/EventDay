@@ -48,8 +48,6 @@ public class EventsAdapter extends BaseAdapter {
         TextView eventAdress = view.findViewById(R.id.place_adress_listview);
         TextView eventHour = view.findViewById(R.id.place_hour_listview);
         TextView eventDate = view.findViewById(R.id.place_date_listview);
-        TextView noEvent = view.findViewById(R.id.noEvents);
-        noEvent.setVisibility(View.VISIBLE);
 
         ImageView eventPhoto = view.findViewById(R.id.photoMyEVent);
 
@@ -57,10 +55,6 @@ public class EventsAdapter extends BaseAdapter {
             Picasso.get()
                     .load(listOfEvents.get(position).getUrlPhoto())
                     .into(eventPhoto);
-        }
-
-        if (listOfEvents == null){
-            noEvent.setVisibility(View.VISIBLE);
         }
 
         eventDate.setText(listOfEvents.get(position).getDateEvent());

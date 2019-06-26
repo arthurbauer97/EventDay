@@ -23,14 +23,15 @@
     </RelativeLayout>
 
     <TextView
-        android:id="@+id/no_result_textview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:id="@+id/noEvents"
+        android:layout_width="437dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/toolbar_container"
         android:layout_marginTop="170dp"
-        android:text="Nenhum resultado disponível, verifique sua conexão com a internet ou se existem pontos no mapa próximos a você!"
+        android:text="Voce não possui eventos proximos!"
         android:textAlignment="center"
-        android:textSize="14dp"
+        android:textColor="@color/colorGreen"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:visibility="gone" />
 

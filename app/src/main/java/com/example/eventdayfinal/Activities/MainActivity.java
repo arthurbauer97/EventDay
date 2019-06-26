@@ -33,6 +33,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ import com.example.eventdayfinal.Models.Event;
 import com.example.eventdayfinal.Models.User;
 import com.example.eventdayfinal.R;
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.IdpResponse;
 import com.github.rtoshiro.util.format.MaskFormatter;
 import com.github.rtoshiro.util.format.SimpleMaskFormatter;
 import com.github.rtoshiro.util.format.pattern.MaskPattern;
@@ -107,6 +109,8 @@ public class MainActivity extends AppCompatActivity
     private ImageView newButtonAddPhoto;
     private ImageView photo_event;
     private Button selectLocationMap;
+
+    private ProgressBar progressBar;
 
     //event object
     private Event event = new Event();
@@ -201,6 +205,13 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+        if (requestCode == 123){
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+            if (resultCode == RESULT_OK) {
+                firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                Toast.makeText(this, "Usuario logado!", Toast.LENGTH_SHORT).show();
+            }
+        }
 
         //photo callback
         if (requestCode == 0 && resultCode == RESULT_OK && data != null) {
@@ -221,6 +232,7 @@ public class MainActivity extends AppCompatActivity
         builder = new AlertDialog.Builder(MainActivity.this);
         view = getLayoutInflater().inflate(R.layout.dialog_new_event, null);
 
+        progressBar = view.findViewById(R.id.progressBar);
 
         selectLocationMap = view.findViewById(R.id.buttonSelectLocationMap);
 
@@ -263,7 +275,10 @@ public class MainActivity extends AppCompatActivity
                     if (!isEmpty()) {
                         if (checkDateFormat(dateEvent.getText().toString())) {
                             if (checkHourFormat(hourEvent.getText().toString())) {
-                                showEventPicker();
+                                if (checkNameFormat(nameEvent.getText().toString())) {
+                                    showEventPicker();
+                                }else
+                                    nameEvent.setError("Nome Invalido");
                             } else
                                 hourEvent.setError("Hora invalida");
                         } else
@@ -277,16 +292,25 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
-    public boolean checkHourFormat(String dateHour) {
-        String time[] = dateHour.split(":");
-        int h = Integer.parseInt(time[0]);
-        int m = Integer.parseInt(time[1]);
-
-        if ((h < 0 || h > 23) || (m < 0 || m > 59)) {
+    public boolean checkNameFormat(String nameEvent){
+        if (nameEvent.length() > 25){
             return false;
-        } else {
-            return true;
         }
+        else return true;
+    }
+    public boolean checkHourFormat(String dateHour){
+        if (dateHour.length() > 4){
+            String time[] = dateHour.split(":");
+            int h = Integer.parseInt(time[0]);
+            int m = Integer.parseInt(time[1]);
+            if ((h < 0 || h > 23) || (m < 0 || m > 59)){
+                return false;
+            }
+            else {
+                return true;
+            }
+        }else
+            return false;
     }
 
     public boolean checkDateFormat(String dateEvent) {
@@ -330,7 +354,7 @@ public class MainActivity extends AppCompatActivity
 
     private void savePhoto() {
         String fileName = UUID.randomUUID().toString();
-
+        progressBar.setVisibility(View.VISIBLE);
         final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
 
         ref.putFile(selectedUri)
@@ -341,10 +365,12 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onSuccess(Uri uri) {
                                 event.setUrlPhoto(uri.toString());
+                                progressBar.setVisibility(View.GONE);
                             }
                         });
                     }
                 });
+
     }
     //--------------------------------------DATABASE METHODS----------------------------------------
 
@@ -461,7 +487,6 @@ public class MainActivity extends AppCompatActivity
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false, true)
                                     .setAvailableProviders(Collections.singletonList(
                                             new AuthUI.IdpConfig.GoogleBuilder().build()))
                                     .build(),

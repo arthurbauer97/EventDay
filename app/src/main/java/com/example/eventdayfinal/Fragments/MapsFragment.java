@@ -320,14 +320,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback,
                         for(DocumentSnapshot doc:docs) {
                             Event event = doc.toObject(Event.class);
                             if(validDate(event.getDateEvent())) {
-                                arrayListEvents.add(event);
-                                mapMarkers.put(event.getIdEvent(),
-                                        addMarkerIntoMaps(event.getLatitude(),
-                                                event.getLogintude(),
-                                                event.getNameEvent(),
-                                                event.getDateEvent(),
-                                                event.getHourEvent(),
-                                                event.getDescriptionEvent()));
+                                    arrayListEvents.add(event);
+                                    mapMarkers.put(event.getIdEvent(),
+                                            addMarkerIntoMaps(event.getLatitude(),
+                                                    event.getLogintude(),
+                                                    event.getNameEvent(),
+                                                    event.getDateEvent(),
+                                                    event.getHourEvent(),
+                                                    event.getDescriptionEvent()));
+
                             }
                         }
                     }

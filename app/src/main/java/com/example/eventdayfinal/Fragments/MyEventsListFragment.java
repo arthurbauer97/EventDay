@@ -95,6 +95,10 @@ public class MyEventsListFragment extends Fragment{
     private FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
     private FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
 
+    private boolean validPhoto = false;
+
+    private ProgressBar progressBar;
+
     private int num;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -107,7 +111,7 @@ public class MyEventsListFragment extends Fragment{
         if (eventsArray != null) {
             fetchEvents();
         } else {
-            noResultsTextView.setVisibility(View.VISIBLE);
+            noEvent.setVisibility(View.VISIBLE);
         }
 
         if (eventsArray.isEmpty() == true){
@@ -204,6 +208,9 @@ public class MyEventsListFragment extends Fragment{
         builder = new AlertDialog.Builder(getContext());
         view = getLayoutInflater().inflate(R.layout.dialog_edit_event,null);
 
+        progressBar = view.findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.INVISIBLE);
+
         buttonSaveEvent = view.findViewById(R.id.buttonSaveEvent);
         nameEvent = view.findViewById(R.id.editNameEvent);
         descriptionEvent = view.findViewById(R.id.editDescriptionEvent);
@@ -248,16 +255,19 @@ public class MyEventsListFragment extends Fragment{
             @Override
             public void onClick(View v) {
                 if (!isEmpty()) {
-                    if (checkDateFormat(dateEvent.getText().toString())){
-                        if (checkHourFormat(hourEvent.getText().toString())) {
-                            if (checkNameFormat(nameEvent.getText().toString())){
-                                updateDataEvents();
-                            }else
-                                nameEvent.setError("Nome invalido");
-                        }else
-                            hourEvent.setError("Hora invalida");
-                    } else
-                        dateEvent.setError("Data invalida");
+                        if (checkDateFormat(dateEvent.getText().toString())) {
+                            if (checkHourFormat(hourEvent.getText().toString())) {
+                                if (checkNameFormat(nameEvent.getText().toString())) {
+                                    if (checkMoneySize(ticketEvent.getText().toString())){
+                                        updateDataEvents();
+                                    }else
+                                        ticketEvent.setError("Valor Invalido");
+                                } else
+                                    nameEvent.setError("Nome Invalido");
+                            } else
+                                hourEvent.setError("Hora Invalida");
+                        } else
+                            dateEvent.setError("Data Invalida");
                 } else {
                     Toast.makeText(getContext(), "Preencha todos os campos", Toast.LENGTH_SHORT).show();
                 }
@@ -321,6 +331,8 @@ public class MyEventsListFragment extends Fragment{
 
     private void savePhoto() {
         String fileName = UUID.randomUUID().toString();
+        progressBar.setVisibility(View.VISIBLE);
+        validPhoto = false;
         final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
         ref.putFile(selectedUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -330,7 +342,8 @@ public class MyEventsListFragment extends Fragment{
                             @Override
                             public void onSuccess(Uri uri) {
                                 photo = uri.toString();
-                                Toast.makeText(getContext(), "Foto Salva", Toast.LENGTH_SHORT).show();
+                                validPhoto = true;
+                                progressBar.setVisibility(View.GONE);
                             }
                         });
                     }
@@ -349,7 +362,7 @@ public class MyEventsListFragment extends Fragment{
 
                             if (event != null) {
                                     eventsArray.add(event);
-                                    noResultsTextView.setVisibility(View.GONE);
+                                    noEvent.setVisibility(View.GONE);
                             }
                             myEventsListView.setAdapter(new MyEventsAdapter(getContext(), eventsArray));
                         }
@@ -364,7 +377,9 @@ public class MyEventsListFragment extends Fragment{
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Toast.makeText(getContext(), "Evento deletado", Toast.LENGTH_SHORT).show();
+                        dialog.hide();
+                        showSnackbar(R.color.colorGreen, R.string.event_deleted);
+
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -386,16 +401,26 @@ public class MyEventsListFragment extends Fragment{
         else return true;
     }
 
-    public boolean checkDateFormat(String dateEvent) {
-        Date date = null;
-        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        try {
-            format.setLenient(false);
-            date = format.parse(dateEvent);
+    public boolean checkMoneySize(String moneyEvent){
+        if (moneyEvent.length() < 9){
             return true;
-        } catch (ParseException e) {
-            return false;
         }
+        else return false;
+    }
+
+    public boolean checkDateFormat(String dateEvent) {
+        if(dateEvent.length() > 9) {
+            Date date = null;
+            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+            try {
+                format.setLenient(false);
+                date = format.parse(dateEvent);
+                return true;
+            } catch (ParseException e) {
+                return false;
+            }
+        }
+        else return false;
     }
 
     public boolean checkHourFormat(String dateHour){

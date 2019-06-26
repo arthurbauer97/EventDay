@@ -174,7 +174,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="invisible"
-        tools:layout_editor_absoluteX="181dp"
-        tools:layout_editor_absoluteY="88dp" />
+        app:layout_constraintBottom_toBottomOf="@+id/newPhotoEvent"
+        app:layout_constraintEnd_toEndOf="@+id/newPhotoEvent"
+        app:layout_constraintStart_toStartOf="@+id/newPhotoEvent"
+        app:layout_constraintTop_toTopOf="@+id/newPhotoEvent" />
 
 </android.support.constraint.ConstraintLayout>

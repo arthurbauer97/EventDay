@@ -45,7 +45,6 @@ import com.squareup.picasso.Picasso;
 public class ListFragment extends Fragment{
 
     private ListView eventsListView;
-    private TextView noResultsTextView;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
@@ -66,9 +65,7 @@ public class ListFragment extends Fragment{
     private TextView descriptionEvent;
     private TextView hourEvent;
     private TextView noEvent;
-    private ImageView newButtonAddPhoto;
     private ImageView photoEvent;
-    private ImageView deleteEvent;
     private Button viewInMap;
     private int num;
 

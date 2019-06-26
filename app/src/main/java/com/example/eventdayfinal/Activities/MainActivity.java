@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity
     private ImageButton drawerMenuButton;
     private BottomNavigationView bottomMenu;
 
+    private boolean validPhoto = false;
 
     private Uri selectedUri;
 
@@ -201,7 +202,6 @@ public class MainActivity extends AppCompatActivity
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 insertEventIntoDatabase(locationData);
-                Toast.makeText(this, "Evento Adicionado!", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity
         view = getLayoutInflater().inflate(R.layout.dialog_new_event, null);
 
         progressBar = view.findViewById(R.id.progressBar);
-
+        progressBar.setVisibility(View.INVISIBLE);
         selectLocationMap = view.findViewById(R.id.buttonSelectLocationMap);
 
         criador_evento = view.findViewById(R.id.nameCreator);
@@ -273,16 +273,19 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 if (isUserAuth()) {
                     if (!isEmpty()) {
-                        if (checkDateFormat(dateEvent.getText().toString())) {
-                            if (checkHourFormat(hourEvent.getText().toString())) {
-                                if (checkNameFormat(nameEvent.getText().toString())) {
-                                    showEventPicker();
-                                }else
-                                    nameEvent.setError("Nome Invalido");
+                            if (checkDateFormat(dateEvent.getText().toString())) {
+                                if (checkHourFormat(hourEvent.getText().toString())) {
+                                    if (checkNameFormat(nameEvent.getText().toString())) {
+                                        if (checkMoneySize(ticketEvent.getText().toString())) {
+                                            showEventPicker();
+                                        }else
+                                            ticketEvent.setError("Valor Invalido");
+                                    } else
+                                        nameEvent.setError("Nome Invalido");
+                                } else
+                                    hourEvent.setError("Hora Invalida");
                             } else
-                                hourEvent.setError("Hora invalida");
-                        } else
-                            dateEvent.setError("Data invalida");
+                                dateEvent.setError("Data Invalida");
                     } else {
                         Toast.makeText(MainActivity.this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
                     }
@@ -314,15 +317,27 @@ public class MainActivity extends AppCompatActivity
     }
 
     public boolean checkDateFormat(String dateEvent) {
-        Date date = null;
-        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        try {
-            format.setLenient(false);
-            date = format.parse(dateEvent);
-            return true;
-        } catch (ParseException e) {
-            return false;
+        if(dateEvent.length() > 9) {
+
+            Date date = null;
+            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+            try {
+                format.setLenient(false);
+                date = format.parse(dateEvent);
+                return true;
+            } catch (ParseException e) {
+                return false;
+            }
         }
+        else return false;
+    }
+
+
+    public boolean checkMoneySize(String moneyEvent){
+        if (moneyEvent.length() < 9){
+            return true;
+        }
+        else return false;
     }
 
     private boolean isEmpty() {
@@ -356,7 +371,6 @@ public class MainActivity extends AppCompatActivity
         String fileName = UUID.randomUUID().toString();
         progressBar.setVisibility(View.VISIBLE);
         final StorageReference ref = FirebaseStorage.getInstance().getReference("/events/" + fileName);
-
         ref.putFile(selectedUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
@@ -366,6 +380,7 @@ public class MainActivity extends AppCompatActivity
                             public void onSuccess(Uri uri) {
                                 event.setUrlPhoto(uri.toString());
                                 progressBar.setVisibility(View.GONE);
+
                             }
                         });
                     }
